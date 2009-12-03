@@ -5,3 +5,8 @@ module Option =
     let maybe = function
         | null -> None
         | x -> Some(x)
+        
+    [<CompiledName("GetValueOrDefault")>]
+    let getOrDefault def = function
+        | Some(x) -> x
+        | None -> def        
