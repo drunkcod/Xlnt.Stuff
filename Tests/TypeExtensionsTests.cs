@@ -1,5 +1,4 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Xlnt.Stuff
 {
@@ -11,7 +10,7 @@ namespace Xlnt.Stuff
 
             readonly int value;
 
-            public MyClass(): this(MyClass.DefaultValue){}
+            public MyClass(): this(DefaultValue){}
             public MyClass(int value) { this.value = value; }
 
             public int Value { get { return value; } }
