@@ -8,7 +8,7 @@
     <ProjectGuid>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Xlnt.Stuff</RootNamespace>
+    <RootNamespace>Xlnt</RootNamespace>
     <AssemblyName>Xlnt.Stuff</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\CsvDataReader.cs" />
     <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
