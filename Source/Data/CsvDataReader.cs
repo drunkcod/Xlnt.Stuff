@@ -30,45 +30,63 @@ namespace Xlnt.Data
             this.reader = reader;
         }
 
-        public void ReadHeader(){
+        public int FieldCount {
+            get { return fields.Length; }
+            set { fields = new string[value]; }
+        }
+
+        public void ReadHeader()
+        {
             fields = ReadLine();
         }
 
-        #region IDataReader Members
-
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        public int Depth
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public DataTable GetSchemaTable()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsClosed
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public bool NextResult()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Read()
-        {
+        public bool Read(){
             values = ReadLine();
             return values.Length > 0;
         }
 
-        public int RecordsAffected
-        {
+        public string GetName(int i){
+            return fields[i];
+        }
+
+        public int GetOrdinal(string name){
+            for (var i = 0; i != fields.Length; ++i)
+                if (fields[i] == name)
+                    return i;
+            for (var i = 0; i != fields.Length; ++i)
+                if (string.Compare(fields[i], name, true) == 0)
+                    return i;
+            throw new ArgumentException("Invalid field name: " + name);
+        }
+
+        public object GetValue(int i){
+            return values[i];
+        }
+
+
+        #region IDataReader Members
+
+        void IDataReader.Close(){
+            throw new NotImplementedException();
+        }
+
+        int IDataReader.Depth {
+            get { throw new NotImplementedException(); }
+        }
+
+        DataTable IDataReader.GetSchemaTable(){
+            throw new NotImplementedException();
+        }
+
+        bool IDataReader.IsClosed {
+            get { throw new NotImplementedException(); }
+        }
+
+        bool IDataReader.NextResult(){
+            throw new NotImplementedException();
+        }
+
+        int IDataReader.RecordsAffected {
             get { throw new NotImplementedException(); }
         }
 
@@ -80,134 +98,87 @@ namespace Xlnt.Data
 
         #region IDataRecord Members
 
-        public int FieldCount
-        {
-            get { return fields.Length; }
-            set { fields = new string[value];}
-        }
-
-        public bool GetBoolean(int i)
-        {
+        bool IDataRecord.GetBoolean(int i){
             throw new NotImplementedException();
         }
 
-        public byte GetByte(int i)
-        {
+        byte IDataRecord.GetByte(int i){
             throw new NotImplementedException();
         }
 
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-        {
+        long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length){
             throw new NotImplementedException();
         }
 
-        public char GetChar(int i)
-        {
+        char IDataRecord.GetChar(int i){
             throw new NotImplementedException();
         }
 
-        public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-        {
+        long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length){
             throw new NotImplementedException();
         }
 
-        public IDataReader GetData(int i)
-        {
+        IDataReader IDataRecord.GetData(int i){
             throw new NotImplementedException();
         }
 
-        public string GetDataTypeName(int i)
-        {
+        string IDataRecord.GetDataTypeName(int i){
             throw new NotImplementedException();
         }
 
-        public DateTime GetDateTime(int i)
-        {
+        DateTime IDataRecord.GetDateTime(int i){
             throw new NotImplementedException();
         }
 
-        public decimal GetDecimal(int i)
-        {
+        decimal IDataRecord.GetDecimal(int i){
             throw new NotImplementedException();
         }
 
-        public double GetDouble(int i)
-        {
+        double IDataRecord.GetDouble(int i){
             throw new NotImplementedException();
         }
 
-        public Type GetFieldType(int i)
-        {
+        Type IDataRecord.GetFieldType(int i){
             throw new NotImplementedException();
         }
 
-        public float GetFloat(int i)
-        {
+        float IDataRecord.GetFloat(int i){
             throw new NotImplementedException();
         }
 
-        public Guid GetGuid(int i)
-        {
+        Guid IDataRecord.GetGuid(int i){
             throw new NotImplementedException();
         }
 
-        public short GetInt16(int i)
-        {
+        short IDataRecord.GetInt16(int i){
             throw new NotImplementedException();
         }
 
-        public int GetInt32(int i)
-        {
+        int IDataRecord.GetInt32(int i){
             throw new NotImplementedException();
         }
 
-        public long GetInt64(int i)
-        {
+        long IDataRecord.GetInt64(int i){
             throw new NotImplementedException();
         }
 
-        public string GetName(int i){
-            return fields[i];
-        }
-
-        public int GetOrdinal(string name)
-        {
-            for(var i = 0; i != fields.Length; ++i)
-                if(fields[i] == name)
-                    return i;
-            for (var i = 0; i != fields.Length; ++i)
-                if (string.Compare(fields[i], name, true) == 0)
-                    return i;
-            throw new ArgumentException("Invalid field name: " + name);
-        }
-
-        public string GetString(int i)
-        {
+        string IDataRecord.GetString(int i){
             throw new NotImplementedException();
         }
 
-        public object GetValue(int i)
-        {
-            return values[i];
-        }
-
-        public int GetValues(object[] values)
-        {
+        int IDataRecord.GetValues(object[] values){
             throw new NotImplementedException();
         }
 
-        public bool IsDBNull(int i)
-        {
+        bool IDataRecord.IsDBNull(int i){
             throw new NotImplementedException();
         }
 
-        public object this[string name]
-        {
+        object IDataRecord.this[string name] {
             get { throw new NotImplementedException(); }
         }
 
-        public object this[int i]
-        {
+        object IDataRecord.this[int i] {
             get { throw new NotImplementedException(); }
         }
 
