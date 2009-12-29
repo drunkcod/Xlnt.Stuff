@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\CsvBulkCopyTests.cs" />
+    <Compile Include="Data\CsvDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
   </ItemGroup>

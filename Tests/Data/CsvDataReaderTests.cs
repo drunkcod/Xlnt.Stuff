@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Xlnt.Data;
 
 namespace Xlnt.Tests.Data
 {

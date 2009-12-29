@@ -2,9 +2,9 @@ using System;
 using System.Data;
 using System.IO;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
-    class CsvDataReader : IDataReader
+    public class CsvDataReader : IDataReader
     {
         readonly TextReader reader;
         string[] values;
