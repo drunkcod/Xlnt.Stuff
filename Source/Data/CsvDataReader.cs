@@ -6,11 +6,18 @@ namespace Xlnt.Data
 {
     public class CsvDataReader : IDataReader
     {
+        static readonly char[] Separators = new[]{','};
+
         readonly TextReader reader;
         string[] values;
+        string[] fields;
         
         public CsvDataReader(TextReader reader){
             this.reader = reader;    
+        }
+
+        public void ReadHeader(){
+            fields = ReadLine();
         }
 
         #region IDataReader Members
@@ -42,11 +49,8 @@ namespace Xlnt.Data
 
         public bool Read()
         {
-            var line = reader.ReadLine();
-            if(string.IsNullOrEmpty(line))
-                return false;
-            values = line.Split(',');
-            return true;
+            values = ReadLine();
+            return values.Length > 0;
         }
 
         public int RecordsAffected
@@ -67,7 +71,11 @@ namespace Xlnt.Data
 
         #region IDataRecord Members
 
-        public int FieldCount { get; set; }
+        public int FieldCount
+        {
+            get { return fields.Length; }
+            set { fields = new string[value];}
+        }
 
         public bool GetBoolean(int i)
         {
@@ -149,9 +157,8 @@ namespace Xlnt.Data
             throw new NotImplementedException();
         }
 
-        public string GetName(int i)
-        {
-            throw new NotImplementedException();
+        public string GetName(int i){
+            return fields[i];
         }
 
         public int GetOrdinal(string name)
@@ -190,5 +197,12 @@ namespace Xlnt.Data
         }
 
         #endregion
+
+        string[] ReadLine(){
+            var line = reader.ReadLine();
+            if (string.IsNullOrEmpty(line))
+                return new string[0];
+            return line.Split(Separators);
+        }
     }
 }

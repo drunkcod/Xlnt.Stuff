@@ -11,13 +11,26 @@ namespace Xlnt.Tests.Data
             var csv = new CsvDataReader(new StringReader(string.Empty));
             Assert.That(csv.Read(), Is.False);
         }
-
         [Test]
         public void GetValue_returns_fields_in_order(){
             var csv = new CsvDataReader(new StringReader("1,2,3"));
             csv.Read();
 
             Assert.That(new[]{ csv.GetValue(0), csv.GetValue(1), csv.GetValue(2)}, Is.EqualTo(new[]{"1", "2", "3"}));            
+        }
+        [Test]
+        public void determines_field_count_from_header_row(){
+            var csv = new CsvDataReader(new StringReader("Id,Value"));
+            csv.ReadHeader();
+            
+            Assert.That(csv.FieldCount, Is.EqualTo(2));
+        }
+        [Test]
+        public void determines_field_names_from_header_row(){
+            var csv = new CsvDataReader(new StringReader("Id,Value"));
+            csv.ReadHeader();
+
+            Assert.That(new[]{csv.GetName(0), csv.GetName(1)}, Is.EqualTo(new[]{"Id", "Value"}));
         }
     }
 }
