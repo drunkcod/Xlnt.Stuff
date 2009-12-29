@@ -18,11 +18,12 @@ namespace Xlnt.Data
             public void Dispose(){ reader.Dispose();}
         }
 
-        static readonly char[] Separators = new[]{','};
+        static readonly char[] DefaultSeparator = new[]{','};
 
         readonly ILineReader reader;
         string[] values;
         string[] fields;
+        char[] separator = DefaultSeparator;
         
         public CsvDataReader(TextReader reader): this(new LineReader(reader)){}
 
@@ -33,6 +34,12 @@ namespace Xlnt.Data
         public int FieldCount {
             get { return fields.Length; }
             set { fields = new string[value]; }
+        }
+
+        public char Separator
+        {
+            get { return separator[0]; }
+            set { separator = new[] {value}; }
         }
 
         public void ReadHeader()
@@ -188,7 +195,7 @@ namespace Xlnt.Data
             var line = reader.ReadLine();
             if (string.IsNullOrEmpty(line))
                 return new string[0];
-            return line.Split(Separators);
+            return line.Split(separator);
         }
     }
 }
