@@ -1,6 +1,9 @@
+using System;
 using System.IO;
+using Moq;
 using NUnit.Framework;
 using Xlnt.Data;
+using Xlnt.IO;
 
 namespace Xlnt.Tests.Data
 {
@@ -31,6 +34,40 @@ namespace Xlnt.Tests.Data
             csv.ReadHeader();
 
             Assert.That(new[]{csv.GetName(0), csv.GetName(1)}, Is.EqualTo(new[]{"Id", "Value"}));
+        }
+        [Test]
+        public void field_ordinals_match_header_ordering(){
+            var csv = new CsvDataReader(new StringReader("Id,Value"));
+            csv.ReadHeader();
+
+            Assert.That(new[] { csv.GetOrdinal("Id"), csv.GetOrdinal("Value") }, Is.EqualTo(new[] { 0, 1 }));            
+        }
+        [Test]
+        public void field_ordinals_give_predecence_to_case_sensative_matches(){
+            var csv = new CsvDataReader(new StringReader("id,Id"));
+            csv.ReadHeader();
+            Assert.That(csv.GetOrdinal("Id"), Is.EqualTo(1));            
+        }
+        [Test]
+        public void field_ordinals_support_case_ignorant_matchin(){
+            var csv = new CsvDataReader(new StringReader("id"));
+            csv.ReadHeader();
+            Assert.That(csv.GetOrdinal("Id"), Is.EqualTo(0));
+        }
+        [Test]
+        public void unknown_fields_throw_exception_when_getting_ordinal()
+        {
+            var csv = new CsvDataReader(new StringReader("id"));
+            csv.ReadHeader();
+            Assert.Throws(typeof(ArgumentException), () => csv.GetOrdinal("MissingField"));            
+        }
+
+        [Test]
+        public void should_dispose_line_reader(){
+            var mock = new Mock<ILineReader>();
+            using(new CsvDataReader(mock.Object))
+                ;            
+            mock.Verify(x => x.Dispose());
         }
     }
 }

@@ -1,19 +1,33 @@
 using System;
 using System.Data;
 using System.IO;
+using Xlnt.IO;
 
 namespace Xlnt.Data
 {
     public class CsvDataReader : IDataReader
     {
+        class LineReader : ILineReader
+        {
+            readonly TextReader reader;
+            public LineReader(TextReader reader){
+                this.reader =reader;
+            }
+
+            public string ReadLine() { return reader.ReadLine(); }
+            public void Dispose(){ reader.Dispose();}
+        }
+
         static readonly char[] Separators = new[]{','};
 
-        readonly TextReader reader;
+        readonly ILineReader reader;
         string[] values;
         string[] fields;
         
-        public CsvDataReader(TextReader reader){
-            this.reader = reader;    
+        public CsvDataReader(TextReader reader): this(new LineReader(reader)){}
+
+        public CsvDataReader(ILineReader reader){
+            this.reader = reader;
         }
 
         public void ReadHeader(){
@@ -60,14 +74,9 @@ namespace Xlnt.Data
 
         #endregion
 
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
+        void IDisposable.Dispose(){
+            reader.Dispose();
         }
-
-        #endregion
 
         #region IDataRecord Members
 
@@ -163,7 +172,13 @@ namespace Xlnt.Data
 
         public int GetOrdinal(string name)
         {
-            throw new NotImplementedException();
+            for(var i = 0; i != fields.Length; ++i)
+                if(fields[i] == name)
+                    return i;
+            for (var i = 0; i != fields.Length; ++i)
+                if (string.Compare(fields[i], name, true) == 0)
+                    return i;
+            throw new ArgumentException("Invalid field name: " + name);
         }
 
         public string GetString(int i)
