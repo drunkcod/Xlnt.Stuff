@@ -12,7 +12,7 @@ namespace Xlnt.Tests.Data
     class CsvDataReader : IDataReader
     {
         readonly TextReader reader;
-        string line;
+        string[] values;
         
         public CsvDataReader(TextReader reader){
             this.reader = reader;    
@@ -47,8 +47,11 @@ namespace Xlnt.Tests.Data
 
         public bool Read()
         {
-            line = reader.ReadLine();
-            return !string.IsNullOrEmpty(line);
+            var line = reader.ReadLine();
+            if(string.IsNullOrEmpty(line))
+                return false;
+            values = line.Split(',');
+            return true;
         }
 
         public int RecordsAffected
@@ -168,7 +171,7 @@ namespace Xlnt.Tests.Data
 
         public object GetValue(int i)
         {
-            throw new NotImplementedException();
+            return values[i];
         }
 
         public int GetValues(object[] values)
@@ -198,23 +201,32 @@ namespace Xlnt.Tests.Data
     {
         public int Id;
         public string Value;
+
+        public override bool Equals(object obj){
+            var other = (Row) obj;
+            return Id == other.Id && Value == other.Value;
+        }
+
+        public override int GetHashCode(){
+            return Value.GetHashCode();
+        }
     }
 
     public class CsvBulkCopyTests
     {
-        private const string ConnectionString = "Server=.;Integrated Security=SSPI";
+        private const string ConnectionString = "Server=.;Integrated Security=SSPI;Initial Catalog=tempdb";
+        
         [Test]
-        public void Insert_multiple_rows_to_tempdb()
-        {
+        public void Insert_multiple_rows_to_tempdb(){
             using(var db = new SqlConnection(ConnectionString))
             using(var command = db.CreateCommand())
             {
                 db.Open();
                 command.CommandText = "create table #rows(id int,value varchar(max))";
                 command.ExecuteNonQuery();
-                var bulkCopy = new SqlBulkCopy(ConnectionString) {DestinationTableName = "tempdb..#rows"};
+                var bulkCopy = new SqlBulkCopy(db) {DestinationTableName = "#rows"};
 
-                var data = new CsvDataReader(new StringReader("42,The Answer\r\n7,Sins"));
+                var data = new CsvDataReader(new StringReader("42,The Answer\r\n7,Sins")) {FieldCount = 2};
 
                 bulkCopy.WriteToServer(data);
 
@@ -235,10 +247,17 @@ namespace Xlnt.Tests.Data
     public class CsvDataReaderTests
     {
         [Test]
-        public void cant_Read_from_empty_stream()
-        {
+        public void cant_Read_from_empty_stream(){
             var csv = new CsvDataReader(new StringReader(string.Empty));
             Assert.That(csv.Read(), Is.False);
+        }
+
+        [Test]
+        public void GetValue_returns_fields_in_order(){
+            var csv = new CsvDataReader(new StringReader("1,2,3"));
+            csv.Read();
+
+            Assert.That(new[]{ csv.GetValue(0), csv.GetValue(1), csv.GetValue(2)}, Is.EqualTo(new[]{"1", "2", "3"}));            
         }
     }
 }
