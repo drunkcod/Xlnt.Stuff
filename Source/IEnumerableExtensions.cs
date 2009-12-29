@@ -5,10 +5,16 @@ namespace Xlnt.Stuff
 {
     public static class IEnumerableExtensions
     {
-        public static void Each<T>(this IEnumerable<T> collection, Action<T> process)
-        {
-            foreach (var item in collection)
+        public static void Each<T>(this IEnumerable<T> collection, Action<T> process){
+            foreach(var item in collection)
                 process(item);
+        }
+
+        public static bool Contains<T>(this IEnumerable<T> collection, T wanted){
+            foreach (var item in collection)
+                if (wanted.Equals(item))
+                    return true;
+            return false;
         }
     }
 }

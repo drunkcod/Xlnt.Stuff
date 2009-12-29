@@ -74,5 +74,11 @@ namespace Xlnt.Tests.Data
             csv.Read();
             Assert.That(new[] {csv.GetValue(0), csv.GetValue(1)}, Is.EqualTo(new[] {"1", "2"}));
         }
+        [Test]
+        public void supports_checking_if_field_exists(){
+            var csv = new CsvDataReader(new StringReader("First,Second"));
+            csv.ReadHeader();
+            Assert.That(new[] { csv.HasField("First"), csv.HasField("NotAvailable") }, Is.EqualTo(new[] { true, false }));
+        }
     }
 }

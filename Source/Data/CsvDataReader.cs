@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.IO;
 using Xlnt.IO;
+using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
@@ -54,6 +55,10 @@ namespace Xlnt.Data
 
         public string GetName(int i){
             return fields[i];
+        }
+
+        public bool HasField(string name){
+            return fields.Contains(name);
         }
 
         public int GetOrdinal(string name){
