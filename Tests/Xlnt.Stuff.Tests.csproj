@@ -8,7 +8,7 @@
     <ProjectGuid>{1417F1E9-2ED9-471B-8E3D-C45C60A00812}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Xlnt.Stuff.Tests</RootNamespace>
+    <RootNamespace>Xlnt.Tests</RootNamespace>
     <AssemblyName>Xlnt.Stuff.Tests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\CsvBulkCopyTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
   </ItemGroup>

@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
   </ItemGroup>
