@@ -81,13 +81,13 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void supports_checking_if_field_exists(){
-            var csv = new CsvDataReader(new StringReader("First,Second"));
+            var csv = ReaderFor("First,Second");
             csv.ReadHeader();
             Assert.That(new[] { csv.HasField("First"), csv.HasField("NotAvailable") }, Is.EqualTo(new[] { true, false }));
         }
         [Test]
         public void field_existance_check_should_be_case_insensitive(){
-            var csv = new CsvDataReader(new StringReader("First"));
+            var csv = ReaderFor("First");
             csv.ReadHeader();
             Assert.That(csv.HasField("fiRst"), Is.True);
         }
