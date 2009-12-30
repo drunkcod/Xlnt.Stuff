@@ -58,7 +58,7 @@ namespace Xlnt.Data
         }
 
         public bool HasField(string name){
-            return fields.Contains(name);
+            return fields.Any(item => string.Compare(item, name, true) == 0);
         }
 
         public int GetOrdinal(string name){

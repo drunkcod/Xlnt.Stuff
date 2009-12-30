@@ -5,6 +5,12 @@ namespace Xlnt.Stuff
 {
     public static class IEnumerableExtensions
     {
+        public static bool Any<T>(this IEnumerable<T> collection, Predicate<T> matches){
+            foreach(var item in collection)
+                if(matches(item))
+                    return true;
+            return false;
+        }
         public static void Each<T>(this IEnumerable<T> collection, Action<T> process){
             foreach(var item in collection)
                 process(item);
