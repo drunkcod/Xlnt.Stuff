@@ -21,6 +21,8 @@ namespace Xlnt.Data
             this.reader = reader;
         }
 
+        public static CsvDataReader Parse(string s) { return new CsvDataReader(new StringReader(s)); }
+
         public int FieldCount {
             get { return fields.Length; }
             set { fields = new string[value]; }

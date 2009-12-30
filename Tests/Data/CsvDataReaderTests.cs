@@ -10,58 +10,54 @@ namespace Xlnt.Tests.Data
 {
     public class CsvDataReaderTests
     {
-        CsvDataReader ReaderFor(string data){
-            return new CsvDataReader(new StringReader(data));
-        }
-
         [Test]
         public void cant_Read_from_empty_stream(){
-            var csv = ReaderFor(string.Empty);
+            var csv = CsvDataReader.Parse(string.Empty);
             Assert.That(csv.Read(), Is.False);
         }
         [Test]
         public void GetValue_returns_fields_in_order(){
-            var csv = ReaderFor("1,2,3");
+            var csv = CsvDataReader.Parse("1,2,3");
             csv.Read();
 
             Assert.That(new[]{ csv.GetValue(0), csv.GetValue(1), csv.GetValue(2)}, Is.EqualTo(new[]{"1", "2", "3"}));            
         }
         [Test]
         public void determines_field_count_from_header_row(){
-            var csv = ReaderFor("Id,Value");
+            var csv = CsvDataReader.Parse("Id,Value");
             csv.ReadHeader();
             
             Assert.That(csv.FieldCount, Is.EqualTo(2));
         }
         [Test]
         public void determines_field_names_from_header_row(){
-            var csv = ReaderFor("Id,Value");
+            var csv = CsvDataReader.Parse("Id,Value");
             csv.ReadHeader();
 
             Assert.That(new[]{csv.GetName(0), csv.GetName(1)}, Is.EqualTo(new[]{"Id", "Value"}));
         }
         [Test]
         public void field_ordinals_match_header_ordering(){
-            var csv = ReaderFor("Id,Value");
+            var csv = CsvDataReader.Parse("Id,Value");
             csv.ReadHeader();
 
             Assert.That(new[] { csv.GetOrdinal("Id"), csv.GetOrdinal("Value") }, Is.EqualTo(new[] { 0, 1 }));            
         }
         [Test]
         public void field_ordinals_give_predecence_to_case_sensative_matches(){
-            var csv = ReaderFor("id,Id");
+            var csv = CsvDataReader.Parse("id,Id");
             csv.ReadHeader();
             Assert.That(csv.GetOrdinal("Id"), Is.EqualTo(1));            
         }
         [Test]
         public void field_ordinals_support_case_ignorant_matchin(){
-            var csv = ReaderFor("id");
+            var csv = CsvDataReader.Parse("id");
             csv.ReadHeader();
             Assert.That(csv.GetOrdinal("Id"), Is.EqualTo(0));
         }
         [Test]
         public void unknown_fields_throw_exception_when_getting_ordinal(){
-            var csv = ReaderFor("id");
+            var csv = CsvDataReader.Parse("id");
             csv.ReadHeader();
             Assert.Throws(typeof(ArgumentException), () => csv.GetOrdinal("MissingField"));            
         }
@@ -74,20 +70,20 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void should_support_different_separators(){
-            var csv = ReaderFor("1;2");
+            var csv = CsvDataReader.Parse("1;2");
             csv.Separator = ';';
             csv.Read();
             Assert.That(new[] {csv.GetValue(0), csv.GetValue(1)}, Is.EqualTo(new[] {"1", "2"}));
         }
         [Test]
         public void supports_checking_if_field_exists(){
-            var csv = ReaderFor("First,Second");
+            var csv = CsvDataReader.Parse("First,Second");
             csv.ReadHeader();
             Assert.That(new[] { csv.HasField("First"), csv.HasField("NotAvailable") }, Is.EqualTo(new[] { true, false }));
         }
         [Test]
         public void field_existance_check_should_be_case_insensitive(){
-            var csv = ReaderFor("First");
+            var csv = CsvDataReader.Parse("First");
             csv.ReadHeader();
             Assert.That(csv.HasField("fiRst"), Is.True);
         }
