@@ -8,8 +8,6 @@ namespace Xlnt.Data
 {
     public class CsvDataReader : IDataReader
     {
-
-
         static readonly char[] DefaultSeparator = new[]{','};
 
         readonly ILineReader reader;
@@ -34,8 +32,7 @@ namespace Xlnt.Data
             set { separator = new[] {value}; }
         }
 
-        public void ReadHeader()
-        {
+        public void ReadHeader(){
             fields = ReadLine();
         }
 
@@ -65,7 +62,6 @@ namespace Xlnt.Data
         public object GetValue(int i){
             return values[i];
         }
-
 
         #region IDataReader Members
 
