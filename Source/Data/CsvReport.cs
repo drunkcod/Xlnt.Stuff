@@ -28,10 +28,15 @@ namespace Xlnt.Data
         public bool WriteHeader { get; set; }
 
         public CsvReport<T> Map<TAny>(Expression<Func<T,TAny>> column){
-            var get = column.Compile();            
-            columns.Add(new CsvReportColumn{
-                Name = GetName(column),
-                GetValue = x => get(x).ToString()});
+            return Map(GetName(column), column.Compile());
+        }
+
+        public CsvReport<T> Map<TAny>(string name, Func<T,TAny> column)
+        {
+            columns.Add(new CsvReportColumn {
+                Name = name,
+                GetValue = x => column(x).ToString()
+            });
             return this;
         }
 

@@ -13,7 +13,7 @@ namespace Xlnt.Tests.Data
         }
 
         [Test]
-        public void Map_columns_for_generic_collection_via_Expressions(){
+        public void Map_columns_for_via_Expressions(){
             var target = new StringWriter();
             var csv = new CsvReport<ReportLine>(target)
                 .Map(x => x.Id)
@@ -21,6 +21,18 @@ namespace Xlnt.Tests.Data
             csv.WriteAll(new[] {new ReportLine {Id = 42, Value = "The Answer"}});
 
             Assert.That(target.ToString(), Is.EqualTo("42;The Answer"));
+        }
+        [Test]
+        public void Map_columns_via_names_and_lambdas(){
+            var target = new StringWriter();
+            var csv = new CsvReport<ReportLine>(target)
+                .Map("Foo", x => x.Id)
+                .Map("Bar", x => x.Value);
+            csv.WriteHeader = true;
+            csv.WriteAll(new[] { new ReportLine { Id = 42, Value = "The Answer" } });
+
+            Assert.That(target.ToString(), Is.EqualTo("Foo;Bar\r\n42;The Answer"));
+            
         }
         [Test]
         public void Expression_columns_generate_header_named_after_their_fields_or_properties(){
@@ -45,6 +57,5 @@ namespace Xlnt.Tests.Data
 
             Assert.That(target.ToString(), Is.EqualTo("1;First\r\n2;Second"));
         }
-
     }
 }
