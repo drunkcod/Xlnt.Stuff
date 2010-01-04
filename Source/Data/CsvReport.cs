@@ -6,6 +6,10 @@ using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
+    /// <summary>
+    /// RFC-4180 compatbile CsvReport.
+    /// see: http://tools.ietf.org/html/rfc4180
+    /// </summary>
     public class CsvReport<T>
     {
         struct CsvReportColumn
@@ -14,7 +18,7 @@ namespace Xlnt.Data
             public Func<T, string> GetValue;
         }
 
-        const string FieldDelimiter = ";";
+        const string FieldDelimiter = ",";
         static string RecordDelimiter { get { return Environment.NewLine; } }
 
         readonly TextWriter target;
@@ -46,13 +50,12 @@ namespace Xlnt.Data
         }
 
         void WriteHeaders(){
-            if(!WriteHeader)
-                return;
-            WriteColumns(x => x.Name);
+            if(WriteHeader)
+                WriteColumns(x => x.Name);
         }
 
         void WriteRecord(T item){
-            WriteColumns(x => x.GetValue(item));
+            WriteColumns(x => Sanitize(x.GetValue(item)));
         }
 
         void WriteColumns(Func<CsvReportColumn,string> getValue){
@@ -65,6 +68,12 @@ namespace Xlnt.Data
 
         static string GetName<TAny>(Expression<Func<T,TAny>> column){
             return ((MemberExpression)column.Body).Member.Name;
+        }
+
+        static string Sanitize(string s){
+            if(s.IndexOfAny(new []{ FieldDelimiter[0], '\n', '"'}) != -1)
+                return string.Format("\"{0}\"",  s.Replace("\"", "\"\""));
+            return s;
         }
     }
 }
