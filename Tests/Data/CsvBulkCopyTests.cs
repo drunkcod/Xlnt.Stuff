@@ -25,7 +25,7 @@ namespace Xlnt.Tests.Data
 
     public class CsvBulkCopyTests
     {
-        private const string ConnectionString = "Server=.\\SQLEXPRESS;Integrated Security=SSPI";
+        private const string ConnectionString = "Server=.;Integrated Security=SSPI";
         
         [Test]
         public void Insert_multiple_rows_to_tempdb(){
