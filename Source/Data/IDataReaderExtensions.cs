@@ -15,12 +15,13 @@ namespace Xlnt.Data
         }
 
         public static IEnumerable<T> As<T>(this IDataReader self) where T : new() {
-            var fields = MatchFields(self, typeof(T));
-            var properties = MatchProperties(self, typeof(T));
+            var knownFields = GetFieldOrdinals(self);
+            var fields = new List<DataReaderColumn>();
+            fields.AddRange(MatchFields(knownFields, typeof(T)));
+            fields.AddRange(MatchProperties(knownFields, typeof(T)));
             return self.As<T>(reader => {
                 var item = new T();
                 fields.ForEach(x => x(item, reader));
-                properties.ForEach(x => x(item, reader));
                 return item;
             });
         }
@@ -36,37 +37,31 @@ namespace Xlnt.Data
             }
         }
 
-        static List<DataReaderColumn> MatchFields(IDataReader reader, Type type) {
+        static Dictionary<string, int> GetFieldOrdinals(IDataReader reader){
             var knownFields = new Dictionary<string, int>(new CaseInsensitiveStringComparer());
             for(var i = 0; i != reader.FieldCount; ++i)
                 knownFields.Add(reader.GetName(i), i);
+            return knownFields;
+        }
 
-            var fields = new List<DataReaderColumn>();
+        static IEnumerable<DataReaderColumn> MatchFields(Dictionary<string,int> knownFields, Type type) {
             var allFields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
             int ordinal;
-            foreach(var field in allFields)
-                if(knownFields.TryGetValue(field.Name, out ordinal))
-                    fields.Add(ColumnFrom(field, ordinal));
-            return fields;
+            foreach(var item in allFields)
+                if(knownFields.TryGetValue(item.Name, out ordinal))
+                    yield return ColumnFrom(item, ordinal);
         }
 
-        static DataReaderColumn ColumnFrom(FieldInfo field, int ordinal) 
-        {
-            return (obj, reader) => field.SetValue(obj, reader.GetValue(ordinal));
-        }
-
-        static List<DataReaderColumn> MatchProperties(IDataReader reader, Type type) {
-            var knownFields = new Dictionary<string, int>(new CaseInsensitiveStringComparer());
-            for(var i = 0; i != reader.FieldCount; ++i)
-                knownFields.Add(reader.GetName(i), i);
-
-            var properties = new List<DataReaderColumn>();
+        static IEnumerable<DataReaderColumn> MatchProperties(Dictionary<string, int> knownFields, Type type) {
             var allProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             int ordinal;
             foreach(var item in allProperties)
                 if(item.CanWrite && knownFields.TryGetValue(item.Name, out ordinal))
-                    properties.Add(ColumnFrom(item, ordinal));
-            return properties;
+                    yield return ColumnFrom(item, ordinal);
+        }
+
+        static DataReaderColumn ColumnFrom(FieldInfo field, int ordinal) {
+            return (obj, reader) => field.SetValue(obj, reader.GetValue(ordinal));
         }
 
         static DataReaderColumn ColumnFrom(PropertyInfo property, int ordinal) {
