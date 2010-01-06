@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using Xlnt.Stuff;
+using DataReaderColumn = System.Action<object, System.Data.IDataReader>;
 
 namespace Xlnt.Data
 {
@@ -18,8 +19,8 @@ namespace Xlnt.Data
             var properties = MatchProperties(self, typeof(T));
             return self.As<T>(reader => {
                 var item = new T();
-                fields.ForEach(x => x.ReadValue(item, reader));
-                properties.ForEach(x => x.ReadValue(item, reader));
+                fields.ForEach(x => x(item, reader));
+                properties.ForEach(x => x(item, reader));
                 return item;
             });
         }
@@ -35,27 +36,6 @@ namespace Xlnt.Data
             }
         }
 
-        struct DataReaderColumn
-        {
-            readonly Action<object, IDataReader> readValue;
-
-            public static DataReaderColumn From(FieldInfo field, int ordinal){
-                return new DataReaderColumn((obj, reader) => field.SetValue(obj, reader.GetValue(ordinal)));
-            }
-
-            public static DataReaderColumn From(PropertyInfo property, int ordinal) {
-                return new DataReaderColumn((obj, reader) => property.SetValue(obj, reader.GetValue(ordinal), null));
-            }
-
-            DataReaderColumn(Action<object,IDataReader> readValue){
-                this.readValue = readValue;
-            }
-
-            public void ReadValue(object obj, IDataReader reader) {
-                readValue(obj, reader);
-            }
-        }
-
         static List<DataReaderColumn> MatchFields(IDataReader reader, Type type) {
             var knownFields = new Dictionary<string, int>(new CaseInsensitiveStringComparer());
             for(var i = 0; i != reader.FieldCount; ++i)
@@ -66,9 +46,13 @@ namespace Xlnt.Data
             int ordinal;
             foreach(var field in allFields)
                 if(knownFields.TryGetValue(field.Name, out ordinal))
-                    fields.Add(DataReaderColumn.From(field, ordinal));
-
+                    fields.Add(ColumnFrom(field, ordinal));
             return fields;
+        }
+
+        static DataReaderColumn ColumnFrom(FieldInfo field, int ordinal) 
+        {
+            return (obj, reader) => field.SetValue(obj, reader.GetValue(ordinal));
         }
 
         static List<DataReaderColumn> MatchProperties(IDataReader reader, Type type) {
@@ -81,9 +65,12 @@ namespace Xlnt.Data
             int ordinal;
             foreach(var item in allProperties)
                 if(item.CanWrite && knownFields.TryGetValue(item.Name, out ordinal))
-                    properties.Add(DataReaderColumn.From(item, ordinal));
-
+                    properties.Add(ColumnFrom(item, ordinal));
             return properties;
+        }
+
+        static DataReaderColumn ColumnFrom(PropertyInfo property, int ordinal) {
+            return (obj, reader) => property.SetValue(obj, reader.GetValue(ordinal), null);
         }
     }
 }
