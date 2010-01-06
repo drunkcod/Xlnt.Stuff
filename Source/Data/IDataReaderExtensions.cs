@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
+using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
@@ -16,8 +17,7 @@ namespace Xlnt.Data
             var fields = MatchFields(self, typeof(T));
             return self.As<T>(reader => {
                 var item = new T();
-                for(var i = 0; i != fields.Count; ++i)
-                    fields[i].ReadValue(item, reader);
+                fields.ForEach(x => x.ReadValue(item, reader));
                 return item;
             });
         }

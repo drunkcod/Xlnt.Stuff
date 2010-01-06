@@ -28,7 +28,7 @@ namespace Xlnt.Data
 
         public void WriteAll(IEnumerable<T> collection){
             WriteHeaders();
-            collection.Each(WriteRecord);
+            collection.ForEach(WriteRecord);
         }
 
         void WriteHeaders(){

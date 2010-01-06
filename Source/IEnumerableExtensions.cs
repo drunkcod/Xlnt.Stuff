@@ -11,7 +11,7 @@ namespace Xlnt.Stuff
                     return true;
             return false;
         }
-        public static void Each<T>(this IEnumerable<T> collection, Action<T> process){
+        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> process){
             foreach(var item in collection)
                 process(item);
         }

@@ -11,7 +11,7 @@ namespace Xlnt.Stuff.Tests
             var items = new[] {1, 2, 3};
             var target = new List<int>();
 
-            items.Each(target.Add);
+            items.ForEach(target.Add);
 
             Assert.That(target, Is.EqualTo(items));
         }
