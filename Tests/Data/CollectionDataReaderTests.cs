@@ -12,11 +12,11 @@ namespace Xlnt.Tests.Data
 {
     class CollectionDataReader<T> : IDataReader
     {
-        readonly IEnumerable<T> source;
+        readonly IEnumerator<T> items;
         FieldCollection<T> columns = new FieldCollection<T>();
 
         public CollectionDataReader(IEnumerable<T> source){
-            this.source = source;
+            items = source.GetEnumerator();
         }
 
         public FieldCollection<T> ColumnMappings 
@@ -47,9 +47,7 @@ namespace Xlnt.Tests.Data
             throw new NotImplementedException();
         }
 
-        bool IDataReader.Read() {
-            throw new NotImplementedException();
-        }
+        bool IDataReader.Read(){ return items.MoveNext(); }
 
         int IDataReader.RecordsAffected {
             get { throw new NotImplementedException(); }
@@ -204,6 +202,16 @@ namespace Xlnt.Tests.Data
             data.ColumnMappings = fields;
 
             Assert.That((data as IDataReader).FieldCount, Is.EqualTo(2));
+        }
+        [Test]
+        public void contiains_source_number_of_rows() {
+            IDataReader data = new CollectionDataReader<Row>(SomeRows);
+
+            var count = 0;
+            while(data.Read())
+                ++count;
+
+            Assert.That(count, Is.EqualTo(SomeRows.Length));
         }
     }
 }
