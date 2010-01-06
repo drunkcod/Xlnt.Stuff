@@ -30,7 +30,8 @@ namespace Xlnt.Tests.Data
         public void Insert_multiple_rows_to_tempdb(){
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
-                var data = new CsvDataReader(new StringReader("42,The Answer\r\n7,Sins")) {FieldCount = 2};
+                var data = new CsvDataReader(new StringReader("42,The Answer\r\n7,Sins"));
+                data.SetFieldCount(2);
 
                 bulkCopy.WriteToServer(data);
 
@@ -41,7 +42,8 @@ namespace Xlnt.Tests.Data
         public void supports_ColumnMapping_by_ordinal(){
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
-                var data = new CsvDataReader(new StringReader("The Answer, 42\r\nSins, 7")) { FieldCount = 2 };
+                var data = new CsvDataReader(new StringReader("The Answer, 42\r\nSins, 7"));
+                data.SetFieldCount(2);
 
                 bulkCopy.ColumnMappings.Add(0, 1);
                 bulkCopy.ColumnMappings.Add(1, 0);
@@ -55,7 +57,8 @@ namespace Xlnt.Tests.Data
         {
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
-                var data = new CsvDataReader(new StringReader("Value,Id\r\nThe Answer, 42\r\nSins, 7")) { FieldCount = 2 };
+                var data = new CsvDataReader(new StringReader("Value,Id\r\nThe Answer, 42\r\nSins, 7"));
+                data.SetFieldCount(2);
 
                 data.ReadHeader();
                 bulkCopy.ColumnMappings.Add("Value", "value");

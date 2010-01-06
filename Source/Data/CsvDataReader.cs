@@ -6,7 +6,7 @@ using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
-    public class CsvDataReader : IDataReader
+    public class CsvDataReader : DataReaderBase
     {
         static readonly char[] DefaultSeparator = new[]{','};
 
@@ -23,27 +23,29 @@ namespace Xlnt.Data
 
         public static CsvDataReader Parse(string s) { return new CsvDataReader(new StringReader(s)); }
 
-        public int FieldCount {
-            get { return fields.Length; }
-            set { fields = new string[value]; }
-        }
-
+        public override int FieldCount { get { return fields.Length; } }
+        
         public char Separator
         {
             get { return separator[0]; }
             set { separator = new[] {value}; }
         }
 
+        public void SetFieldCount(int count) 
+        {
+            fields = new string[count];
+        }
+        
         public void ReadHeader(){
             fields = ReadLine();
         }
 
-        public bool Read(){
+        public override bool Read(){
             values = ReadLine();
             return values.Length > 0;
         }
 
-        public string GetName(int i){
+        public override string GetName(int i){
             return fields[i];
         }
 
@@ -51,139 +53,8 @@ namespace Xlnt.Data
             return fields.Any(item => string.Compare(item, name, true) == 0);
         }
 
-        public int GetOrdinal(string name){
-            for (var i = 0; i != fields.Length; ++i)
-                if (fields[i] == name)
-                    return i;
-            for (var i = 0; i != fields.Length; ++i)
-                if (string.Compare(fields[i], name, true) == 0)
-                    return i;
-            throw new ArgumentException("Invalid field name: " + name);
-        }
-
-        public object GetValue(int i){
-            return values[i];
-        }
-
-        #region IDataReader Members
-
-        void IDataReader.Close(){
-            throw new NotImplementedException();
-        }
-
-        int IDataReader.Depth {
-            get { throw new NotImplementedException(); }
-        }
-
-        DataTable IDataReader.GetSchemaTable(){
-            throw new NotImplementedException();
-        }
-
-        bool IDataReader.IsClosed {
-            get { throw new NotImplementedException(); }
-        }
-
-        bool IDataReader.NextResult(){
-            throw new NotImplementedException();
-        }
-
-        int IDataReader.RecordsAffected {
-            get { throw new NotImplementedException(); }
-        }
-
-        #endregion
-
-        void IDisposable.Dispose(){
-            reader.Dispose();
-        }
-
-        #region IDataRecord Members
-
-        bool IDataRecord.GetBoolean(int i){
-            throw new NotImplementedException();
-        }
-
-        byte IDataRecord.GetByte(int i){
-            throw new NotImplementedException();
-        }
-
-        long IDataRecord.GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length){
-            throw new NotImplementedException();
-        }
-
-        char IDataRecord.GetChar(int i){
-            throw new NotImplementedException();
-        }
-
-        long IDataRecord.GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length){
-            throw new NotImplementedException();
-        }
-
-        IDataReader IDataRecord.GetData(int i){
-            throw new NotImplementedException();
-        }
-
-        string IDataRecord.GetDataTypeName(int i){
-            throw new NotImplementedException();
-        }
-
-        DateTime IDataRecord.GetDateTime(int i){
-            throw new NotImplementedException();
-        }
-
-        decimal IDataRecord.GetDecimal(int i){
-            throw new NotImplementedException();
-        }
-
-        double IDataRecord.GetDouble(int i){
-            throw new NotImplementedException();
-        }
-
-        Type IDataRecord.GetFieldType(int i){
-            throw new NotImplementedException();
-        }
-
-        float IDataRecord.GetFloat(int i){
-            throw new NotImplementedException();
-        }
-
-        Guid IDataRecord.GetGuid(int i){
-            throw new NotImplementedException();
-        }
-
-        short IDataRecord.GetInt16(int i){
-            throw new NotImplementedException();
-        }
-
-        int IDataRecord.GetInt32(int i){
-            throw new NotImplementedException();
-        }
-
-        long IDataRecord.GetInt64(int i){
-            throw new NotImplementedException();
-        }
-
-        string IDataRecord.GetString(int i){
-            throw new NotImplementedException();
-        }
-
-        int IDataRecord.GetValues(object[] values){
-            throw new NotImplementedException();
-        }
-
-        bool IDataRecord.IsDBNull(int i){
-            throw new NotImplementedException();
-        }
-
-        object IDataRecord.this[string name] {
-            get { throw new NotImplementedException(); }
-        }
-
-        object IDataRecord.this[int i] {
-            get { throw new NotImplementedException(); }
-        }
-
-        #endregion
+        public override object GetValue(int i){ return values[i]; }
+        protected override void DisposeCore() { reader.Dispose(); }
 
         string[] ReadLine(){
             var line = reader.ReadLine();

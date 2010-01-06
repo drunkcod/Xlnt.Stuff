@@ -87,6 +87,5 @@ namespace Xlnt.Tests.Data
             report.WriteAll(new[] { new ReportLine { Value = "\"" } });
             Assert.That(Result, Is.EqualTo("\"\"\"\""));
         }
-
     }
 }

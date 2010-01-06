@@ -48,6 +48,7 @@
     <Compile Include="Data\CollectionDataReader.cs" />
     <Compile Include="Data\CsvDataReader.cs" />
     <Compile Include="Data\CsvReport.cs" />
+    <Compile Include="Data\DataReaderBase.cs" />
     <Compile Include="Data\FieldCollection.cs" />
     <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="IO\ILineReader.cs" />
