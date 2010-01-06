@@ -113,9 +113,7 @@ namespace Xlnt.Data
             throw new NotImplementedException();
         }
 
-        int IDataRecord.GetInt32(int i) {
-            throw new NotImplementedException();
-        }
+        int IDataRecord.GetInt32(int i) { return Convert.ToInt32(GetValue(i)); }
 
         long IDataRecord.GetInt64(int i) {
             throw new NotImplementedException();

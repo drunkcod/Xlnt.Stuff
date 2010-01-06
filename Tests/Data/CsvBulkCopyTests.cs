@@ -21,6 +21,10 @@ namespace Xlnt.Tests.Data
         public override int GetHashCode(){
             return Value.GetHashCode();
         }
+
+        public override string ToString() {
+            return string.Format("{{\"Id\":{0},\"Value\":\"{1}\"}}", Id, Value);
+        }
     }
 
     public class CsvBulkCopyTests : SqlBulkCopyFixture
