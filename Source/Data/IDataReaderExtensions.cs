@@ -13,16 +13,54 @@ namespace Xlnt.Data
         }
 
         public static IEnumerable<T> As<T>(this IDataReader self) where T : new() {
-            var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance);
-            var fieldOrdinals = new int[fields.Length];
-            for(var i = 0; i != fields.Length; ++i)
-                fieldOrdinals[i] = self.GetOrdinal(fields[i].Name);
+            var fields = MatchFields(self, typeof(T));
             return self.As<T>(reader => {
                 var item = new T();
-                for(var i = 0; i != fields.Length; ++i)
-                    fields[i].SetValue(item, reader.GetValue(fieldOrdinals[i]));
+                for(var i = 0; i != fields.Count; ++i)
+                    fields[i].ReadValue(item, reader);
                 return item;
             });
+        }
+
+        class CaseInsensitiveStringComparer : IEqualityComparer<string>
+        {
+            public bool Equals(string x, string y) {
+                return string.Compare(x, y, true) == 0;
+            }
+
+            public int GetHashCode(string obj) {
+                return obj.ToLowerInvariant().GetHashCode();
+            }
+        }
+
+        struct DataReaderField
+        {
+            readonly FieldInfo field;
+            readonly int ordinal;
+
+            public DataReaderField(FieldInfo field, int ordinal) {
+                this.field = field;
+                this.ordinal = ordinal;
+            }
+
+            public void ReadValue(object obj, IDataReader reader) {
+                field.SetValue(obj, reader.GetValue(ordinal));
+            }
+        }
+
+        static List<DataReaderField> MatchFields(IDataReader reader, Type type) {
+            var knownFields = new Dictionary<string, int>(new CaseInsensitiveStringComparer());
+            for(var i = 0; i != reader.FieldCount; ++i)
+                knownFields.Add(reader.GetName(i), i);
+
+            var fields = new List<DataReaderField>();
+            var allFields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            int ordinal;
+            foreach(var field in allFields)
+                if(knownFields.TryGetValue(field.Name, out ordinal))
+                    fields.Add(new DataReaderField(field, ordinal));
+
+            return fields;
         }
     }
 }

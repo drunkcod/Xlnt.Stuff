@@ -41,6 +41,16 @@ namespace Xlnt.Tests.Data
                 data.As<Row>().ToList(),
                 Is.EqualTo(new[]{ new Row{ Id = 1, Value = items[0].Value } }));        
         }
+        [Test]
+        public void As_ignores_missing_fields() {
+            var items = new[] { MakeItem("SomeValue") };
+
+            var data = new CollectionDataReader<Item<string>>(items);
+            data.ColumnMappings.Add(x => x.Value);
+            Assert.That(
+                data.As<Row>().ToList(),
+                Is.EqualTo(new[] { new Row { Value = items[0].Value } }));
+        }
 
         [Test]
         public void Int32_roundtrip(){
