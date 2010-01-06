@@ -6,18 +6,24 @@ using NUnit.Framework;
 using System.Data.SqlClient;
 using System.Data;
 using System.Linq.Expressions;
+using Xlnt.Data;
 
 namespace Xlnt.Tests.Data
 {
     class CollectionDataReader<T> : IDataReader
     {
         readonly IEnumerable<T> source;
+        FieldCollection<T> columns = new FieldCollection<T>();
 
         public CollectionDataReader(IEnumerable<T> source){
             this.source = source;
         }
 
-        public CollectionDataReader<T> Map<TAny>(Expression<Func<T,TAny>> column){ return this; }
+        public FieldCollection<T> ColumnMappings 
+        {
+            get { return columns; }
+            set { columns = value; }
+        }
 
         #region IDataReader Members
 
@@ -61,9 +67,7 @@ namespace Xlnt.Tests.Data
 
         #region IDataRecord Members
 
-        int IDataRecord.FieldCount {
-            get { throw new NotImplementedException(); }
-        }
+        int IDataRecord.FieldCount { get { return columns.Count; } }
 
         bool IDataRecord.GetBoolean(int i) {
             throw new NotImplementedException();
@@ -171,22 +175,35 @@ namespace Xlnt.Tests.Data
 
     public class CollectionDataReaderTests : SqlBulkCopyFixture
     {
+        readonly Row[] SomeRows = new[]{                   
+            new Row { Id = 42, Value = "The Answer" }, 
+            new Row { Id = 7, Value = "Sins" } };
+
+
         [Test, Pending]
         public void should_be_SqlBulkCopy_compatible() {
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
 
-                var rows = new[]{                   
-                    new Row { Id = 42, Value = "The Answer" }, 
-                    new Row { Id = 7, Value = "Sins" } };
-
-                var data = new CollectionDataReader<Row>(rows)
-                    .Map(x => x.Id)
-                    .Map(x => x.Value);
+                var data = new CollectionDataReader<Row>(SomeRows);
+                data.ColumnMappings
+                    .Add(x => x.Id)
+                    .Add(x => x.Value);
 
                 bulkCopy.WriteToServer(data);
-                CheckRows(db, rows);
+                CheckRows(db, SomeRows);
             });
+        }
+        [Test]
+        public void should_use_field_count_from_FieldCollection() {
+            var fields = new FieldCollection<Row>()
+                .Add(x => x.Id)
+                .Add(x => x.Value);
+
+            var data = new CollectionDataReader<Row>(SomeRows);
+            data.ColumnMappings = fields;
+
+            Assert.That((data as IDataReader).FieldCount, Is.EqualTo(2));
         }
     }
 }
