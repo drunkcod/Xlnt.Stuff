@@ -16,7 +16,7 @@ namespace Xlnt.Data
             for(var i = 0; i != FieldCount; ++i)
                 if(string.Compare(GetName(i), name, true) == 0)
                     return i;
-            throw new ArgumentException("Invalid field name: " + name);
+            throw new IndexOutOfRangeException("Invalid field name: " + name);
         }
         
         public abstract bool Read();

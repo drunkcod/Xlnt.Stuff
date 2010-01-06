@@ -59,7 +59,7 @@ namespace Xlnt.Tests.Data
         public void unknown_fields_throw_exception_when_getting_ordinal(){
             var csv = CsvDataReader.Parse("id");
             csv.ReadHeader();
-            Assert.Throws(typeof(ArgumentException), () => csv.GetOrdinal("MissingField"));            
+            Assert.Throws(typeof(IndexOutOfRangeException), () => csv.GetOrdinal("MissingField"));            
         }
         [Test]
         public void should_dispose_line_reader(){
