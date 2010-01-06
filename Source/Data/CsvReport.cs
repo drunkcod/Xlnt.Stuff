@@ -12,17 +12,11 @@ namespace Xlnt.Data
     /// </summary>
     public class CsvReport<T>
     {
-        struct CsvReportColumn
-        {
-            public string Name;
-            public Func<T, string> GetValue;
-        }
-
         const string FieldDelimiter = ",";
         static string RecordDelimiter { get { return Environment.NewLine; } }
 
         readonly TextWriter target;
-        readonly List<CsvReportColumn> columns = new List<CsvReportColumn>();
+        readonly FieldCollection<T> columns = new FieldCollection<T>();
         private string delimiter;
 
         public CsvReport(TextWriter target){
@@ -30,19 +24,7 @@ namespace Xlnt.Data
         }
 
         public bool WriteHeader { get; set; }
-
-        public CsvReport<T> Map<TAny>(Expression<Func<T,TAny>> column){
-            return Map(GetName(column), column.Compile());
-        }
-
-        public CsvReport<T> Map<TAny>(string name, Func<T,TAny> column)
-        {
-            columns.Add(new CsvReportColumn {
-                Name = name,
-                GetValue = x => column(x).ToString()
-            });
-            return this;
-        }
+        public FieldCollection<T> ColumnMappings { get { return columns; } }
 
         public void WriteAll(IEnumerable<T> collection){
             WriteHeaders();
@@ -51,16 +33,16 @@ namespace Xlnt.Data
 
         void WriteHeaders(){
             if(WriteHeader)
-                WriteColumns(x => x.Name);
+                WriteColumns((name, read) => name);
         }
 
         void WriteRecord(T item){
-            WriteColumns(x => Sanitize(x.GetValue(item)));
+            WriteColumns((name, read) => Sanitize(read(item).ToString()));
         }
 
-        void WriteColumns(Func<CsvReportColumn,string> getValue){
+        void WriteColumns(Func<string,Func<T,object>,string> getValue){
             for (var i = 0; i != columns.Count; ++i, delimiter = FieldDelimiter)
-                target.Write("{0}{1}", delimiter, getValue(columns[i]));
+                target.Write("{0}{1}", delimiter, getValue(columns.GetName(i), columns.GetReader(i)));
             NextRecord();            
         }
 

@@ -11,7 +11,7 @@ namespace Xlnt.Data
         struct Field
         {
             public string Name;
-            public Func<T, string> Read;
+            public Func<T, object> Read;
         }
 
         readonly List<Field> fields = new List<Field>();
@@ -27,14 +27,16 @@ namespace Xlnt.Data
             return ((MemberExpression)column.Body).Member.Name;
         }
 
-        public FieldCollection<T> Add<TAny>(string name, Func<T, TAny> column) {
+        public FieldCollection<T> Add<TAny>(string name, Func<T, TAny> read) {
             fields.Add(new Field {
                 Name = name,
-                Read = x => column(x).ToString()
+                Read = x => read(x)
             });
             return this;
         }
 
-        public object Read(T item, int i) { return fields[i].Read(item); }
+        public string GetName(int i) { return fields[i].Name; }
+        public Func<T, object> GetReader(int i) { return fields[i].Read; }
+        public object Read(T item, int i) { return GetReader(i)(item); }
     }
 }

@@ -32,12 +32,10 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void should_use_field_count_from_FieldCollection() {
-            var fields = new FieldCollection<Row>()
-                .Add(x => x.Id)
-                .Add(x => x.Value);
-
             var data = new CollectionDataReader<Row>(SomeRows);
-            data.ColumnMappings = fields;
+                data.ColumnMappings
+                    .Add(x => x.Id)
+                    .Add(x => x.Value);
 
             Assert.That((data as IDataReader).FieldCount, Is.EqualTo(2));
         }

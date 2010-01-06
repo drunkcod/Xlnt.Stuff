@@ -25,8 +25,9 @@ namespace Xlnt.Tests.Data
 
         [Test]
         public void Map_columns_for_via_Expressions(){
-            report.Map(x => x.Id)
-                .Map(x => x.Value);
+            report.ColumnMappings
+                .Add(x => x.Id)
+                .Add(x => x.Value);
 
             report.WriteAll(new[] {new ReportLine {Id = 42, Value = "The Answer"}});
 
@@ -34,8 +35,9 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void Map_columns_via_names_and_lambdas(){
-            report.Map("Foo", x => x.Id)
-                .Map("Bar", x => x.Value);
+            report.ColumnMappings
+                .Add("Foo", x => x.Id)
+                .Add("Bar", x => x.Value);
 
             report.WriteHeader = true;
             report.WriteAll(new[] { new ReportLine { Id = 42, Value = "The Answer" } });
@@ -44,8 +46,9 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void Expression_columns_generate_header_named_after_their_fields_or_properties(){
-            report.Map(x => x.Id)
-                .Map(x => x.Value);
+            report.ColumnMappings
+                .Add(x => x.Id)
+                .Add(x => x.Value);
 
             report.WriteHeader = true;
             report.WriteAll(new[] { new ReportLine { Id = 42, Value = "The Answer" } });
@@ -54,8 +57,9 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void should_write_one_record_per_line(){
-            report.Map(x => x.Id)
-                .Map(x => x.Value);
+            report.ColumnMappings
+                .Add(x => x.Id)
+                .Add(x => x.Value);
 
             report.WriteAll(new[]{
                 new ReportLine { Id = 1, Value = "First" },
@@ -65,21 +69,21 @@ namespace Xlnt.Tests.Data
         }
         [Test]
         public void should_quote_field_delimiter() {
-            report.Map(x => x.Value);
+            report.ColumnMappings.Add(x => x.Value);
             report.WriteAll(new[]{ new ReportLine { Value = "," } });
 
             Assert.That(Result, Is.EqualTo("\",\""));
         }
         [Test]
         public void should_quote_line_breaks() {
-            report.Map(x => x.Value);
+            report.ColumnMappings.Add(x => x.Value);
             report.WriteAll(new[] { new ReportLine { Value = "\r\n" } });
 
             Assert.That(Result, Is.EqualTo("\"\r\n\""));
         }
         [Test]//Yes I know this sounds totally strange...
         public void should_double_quote_and_quote_quotes() {
-            report.Map(x => x.Value);
+            report.ColumnMappings.Add(x => x.Value);
             report.WriteAll(new[] { new ReportLine { Value = "\"" } });
             Assert.That(Result, Is.EqualTo("\"\"\"\""));
         }

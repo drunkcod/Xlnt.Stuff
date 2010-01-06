@@ -13,10 +13,7 @@ namespace Xlnt.Data
             items = source.GetEnumerator();
         }
 
-        public FieldCollection<T> ColumnMappings {
-            get { return columns; }
-            set { columns = value; }
-        }
+        public FieldCollection<T> ColumnMappings { get { return columns; } }
 
         #region IDataReader Members
 
