@@ -53,6 +53,7 @@
     <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="IO\ILineReader.cs" />
     <Compile Include="IO\LineReader.cs" />
+    <Compile Include="Lambdas.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
   </ItemGroup>

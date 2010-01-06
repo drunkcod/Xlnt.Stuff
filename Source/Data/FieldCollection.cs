@@ -20,17 +20,17 @@ namespace Xlnt.Data
 
         public FieldCollection<T> Add<TAny>(Expression<Func<T, TAny>> column)
         {
-            return Add(GetName(column), column.Compile());
+            return Add(GetName(column.Body), Lambdas.Box(column.Compile()));
         }
 
-        static string GetName<TAny>(Expression<Func<T, TAny>> column) {
-            return ((MemberExpression)column.Body).Member.Name;
+        static string GetName(Expression expression) {
+            return ((MemberExpression)expression).Member.Name;
         }
 
-        public FieldCollection<T> Add<TAny>(string name, Func<T, TAny> read) {
+        public FieldCollection<T> Add(string name, Func<T, object> read) {
             fields.Add(new Field {
                 Name = name,
-                Read = x => read(x)
+                Read = read
             });
             return this;
         }
