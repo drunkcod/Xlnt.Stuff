@@ -25,6 +25,11 @@ namespace Xlnt.Data
             return ((MemberExpression)expression).Member.Name;
         }
 
+        //Since F# doesn't autobox return values this is here for convinence.
+        public FieldCollection<T> Add<TAny>(string name, Func<T, TAny> read) {
+            return Add(name, Lambdas.Box(read));
+        }
+
         public FieldCollection<T> Add(string name, Func<T, object> read) {
             fields.Add(new Field {
                 Name = name,

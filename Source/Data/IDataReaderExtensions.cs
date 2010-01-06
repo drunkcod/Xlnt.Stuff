@@ -24,7 +24,7 @@ namespace Xlnt.Data
                 fields.ForEach(x => x(item, reader));
                 return item;
             });
-        }
+        }   
 
         class CaseInsensitiveStringComparer : IEqualityComparer<string>
         {
