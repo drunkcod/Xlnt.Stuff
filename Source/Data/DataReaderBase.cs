@@ -119,9 +119,7 @@ namespace Xlnt.Data
             throw new NotImplementedException();
         }
 
-        string IDataRecord.GetString(int i) {
-            throw new NotImplementedException();
-        }
+        string IDataRecord.GetString(int i) { return GetValue(i).ToString(); }
 
         int IDataRecord.GetValues(object[] values) {
             throw new NotImplementedException();

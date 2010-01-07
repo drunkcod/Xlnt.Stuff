@@ -106,6 +106,10 @@ namespace Xlnt.Tests.Data
         public void Int32_roundtrip(){
             CheckRoundtrip(reader => MakeItem(reader.GetInt32(0)), MakeItem(42));
         }
+        [Test]
+        public void String_roundtrip(){
+            CheckRoundtrip(reader => MakeItem(reader.GetString(0)), MakeItem("Hello World!"));
+        }
 
         static void CheckRoundtrip<T>(Converter<IDataReader, Item<T>> toItem, params Item<T>[] items) {
             var data = items.AsDataReader();

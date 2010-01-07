@@ -48,10 +48,6 @@ namespace Xlnt.Data
 
         void NextRecord() { delimiter = RecordDelimiter; }
 
-        static string GetName<TAny>(Expression<Func<T,TAny>> column){
-            return ((MemberExpression)column.Body).Member.Name;
-        }
-
         static string Sanitize(string s){
             if(s.IndexOfAny(new []{ FieldDelimiter[0], '\n', '"'}) != -1)
                 return string.Format("\"{0}\"",  s.Replace("\"", "\"\""));
