@@ -53,6 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Source\NUnit\Scenario.cs">
+      <Link>Scenario.cs</Link>
+    </Compile>
     <Compile Include="Data\CollectionDataReaderTests.cs" />
     <Compile Include="Data\CsvBulkCopyTests.cs" />
     <Compile Include="Data\CsvDataReaderTests.cs" />
