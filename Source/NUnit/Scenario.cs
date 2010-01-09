@@ -1,19 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using System.Reflection;
 
 namespace Xlnt.NUnit
 {
-    class ScenarioBase : IEnumerable<TestCaseData>
+    public class ScenarioFixture
+    {
+        [TestCaseSource("AllScenarios")]
+        public void Scenarios(Action verify) { verify(); }
+
+        public IEnumerable<TestCaseData> AllScenarios() {
+            var methods = GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            foreach(var item in methods) {
+                if(typeof(Scenario).IsAssignableFrom(item.ReturnType)){
+                    var scenario = item.Invoke(this, null) as IEnumerable<TestCaseData>;
+                    foreach(var test in scenario)
+                        yield return test;
+                }
+            }
+        }
+    }
+
+    public class Scenario : IEnumerable<TestCaseData>
     {
         readonly List<TestCaseData> tests;
         string stimuli;
 
-        public ScenarioBase() {
+        public Scenario() {
             this.tests = new List<TestCaseData>();
         }
 
-        protected ScenarioBase(ScenarioBase other) { this.tests = other.tests; }     
+        protected Scenario(Scenario other) { this.tests = other.tests; }
+
+        public Scenario Given(string context, Action establishContext) {
+            AddTest(Given(context), establishContext);
+            return new FixtureContextScenario(this);
+        }
+
+        public virtual FixtureContextScenario When(string stimuli, Action stimulate) {
+            return new FixtureContextScenario(this).When(stimuli, stimulate);
+        }
+
+        public virtual Scenario<T> When<T>(string stimuli, Func<T> stimulate) {
+            return new Scenario<T>(this).When(stimuli, stimulate);
+        }
+
 
         protected void AddTest(string name, Action action) {
             tests.Add(new TestCaseData(action).SetName(name));
@@ -27,26 +59,16 @@ namespace Xlnt.NUnit
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return tests.GetEnumerator(); }
     }
 
-    class Scenario : ScenarioBase
+    public class FixtureContextScenario : Scenario
     {
         Action stimulate;
 
-        public Scenario() { }
-        internal Scenario(ScenarioBase other): base(other) { }
+        internal FixtureContextScenario(Scenario other) : base(other) { }
 
-        public Scenario Given(string context, Action establishContext) {
-            AddTest(Given(context), establishContext);
-            return this;
-        }
-
-        public Scenario When(string stimuli, Action stimulate) {
+        public override FixtureContextScenario When(string stimuli, Action stimulate) {
             SetWhen(stimuli);
             this.stimulate = stimulate;
             return this;
-        }
-
-        public Scenario<T> When<T>(string stimuli, Func<T> stimulate) {
-            return new Scenario<T>(this).When(stimuli, stimulate);
         }
 
         public Scenario Then(string happens, Action check) {
@@ -61,11 +83,11 @@ namespace Xlnt.NUnit
         }
     }
 
-    class Scenario<T> : ScenarioBase
+    public class Scenario<T> : Scenario
     {
         Func<T> stimulate;
 
-        internal Scenario(ScenarioBase other): base(other) { }
+        internal Scenario(Scenario other): base(other) { }
 
         public Scenario<T> When(string stimuli, Func<T> stimulate) {
             SetWhen(stimuli);
@@ -73,10 +95,16 @@ namespace Xlnt.NUnit
             return this;
         }
 
-        public Scenario Then(string happens, Action<T> check) {
+        public Scenario<T> Then(string happens, Action<T> check) {
             var thisStimuli = stimulate;
             AddTest(Then(happens), () => { check(thisStimuli()); });
-            return new Scenario(this);
+            return this;
         }
+
+        public Scenario<T> And(string somethingMore, Action check) {
+            AddTest("    And " + somethingMore, check);
+            return this;
+        }
+
     }
 }
