@@ -17,7 +17,5 @@ namespace Xlnt.Stuff
         static T New<T>(Type self, Type[] types, object[] args){
             return (T)self.GetConstructor(types).Invoke(args);
         }
-
-        static void Foo() { }
     }
 }
