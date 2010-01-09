@@ -50,6 +50,11 @@ namespace Xlnt.NUnit
             return new Scenario<T>(this).When(stimuli, stimulate);
         }
 
+        public Scenario It(string should, Action check) {
+            AddTest(It(should), check);
+            return this;
+        }
+
 
         protected void AddTest(string name, Action action) {
             tests.Add(new TestCaseData(action).SetName(name));
@@ -59,6 +64,7 @@ namespace Xlnt.NUnit
         protected void SetWhen(string stimuli) { this.stimuli = "   When " + stimuli; }
         protected string Then(string happens) { return stimuli + " Then " + happens; }
         protected string And(string somethingMore) { return "    And " + somethingMore; }
+        private string It(string should) { return "  It " + should; }
 
         IEnumerator<TestCaseData> IEnumerable<TestCaseData>.GetEnumerator() { return tests.GetEnumerator(); }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return tests.GetEnumerator(); }
