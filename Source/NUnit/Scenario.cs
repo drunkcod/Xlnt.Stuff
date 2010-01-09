@@ -31,6 +31,10 @@ namespace Xlnt.NUnit
             this.tests = new List<TestCaseData>();
         }
 
+        public Scenario(string description): this() {
+            AddTest("Scenario: " + description, () => { });
+        }
+
         protected Scenario(Scenario other) { this.tests = other.tests; }
 
         public Scenario Given(string context, Action establishContext) {
@@ -52,8 +56,9 @@ namespace Xlnt.NUnit
         }
 
         protected string Given(string context) { return "Given " + context; }
-        protected void SetWhen(string stimuli) { this.stimuli = " When " + stimuli; }
+        protected void SetWhen(string stimuli) { this.stimuli = "   When " + stimuli; }
         protected string Then(string happens) { return stimuli + " Then " + happens; }
+        protected string And(string somethingMore) { return "    And " + somethingMore; }
 
         IEnumerator<TestCaseData> IEnumerable<TestCaseData>.GetEnumerator() { return tests.GetEnumerator(); }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return tests.GetEnumerator(); }
@@ -78,7 +83,7 @@ namespace Xlnt.NUnit
         }
 
         public Scenario And(string somethingMore, Action check) {
-            AddTest("    And " + somethingMore, check);
+            AddTest(And(somethingMore), check);
             return this;
         }
     }
@@ -102,7 +107,7 @@ namespace Xlnt.NUnit
         }
 
         public Scenario<T> And(string somethingMore, Action check) {
-            AddTest("    And " + somethingMore, check);
+            AddTest(And(somethingMore), check);
             return this;
         }
 
