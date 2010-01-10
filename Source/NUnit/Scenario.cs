@@ -55,7 +55,6 @@ namespace Xlnt.NUnit
             return this;
         }
 
-
         protected void AddTest(string name, Action action) {
             tests.Add(new TestCaseData(action).SetName(name));
         }
