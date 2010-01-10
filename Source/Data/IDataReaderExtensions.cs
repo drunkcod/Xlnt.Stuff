@@ -25,17 +25,6 @@ namespace Xlnt.Data
             });
         }   
 
-        class CaseInsensitiveStringComparer : IEqualityComparer<string>
-        {
-            public bool Equals(string x, string y) {
-                return string.Compare(x, y, true) == 0;
-            }
-
-            public int GetHashCode(string obj) {
-                return obj.ToLowerInvariant().GetHashCode();
-            }
-        }
-
         static Dictionary<string, int> GetFieldOrdinals(IDataReader reader){
             var knownFields = new Dictionary<string, int>(new CaseInsensitiveStringComparer());
             for(var i = 0; i != reader.FieldCount; ++i)
