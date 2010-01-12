@@ -1,6 +1,6 @@
 ﻿using System.Reflection.Emit;
 
-namespace NMeter
+namespace Xlnt.Stuff
 {
     public static class ILGeneratorExtensions
     {
