@@ -64,6 +64,7 @@
     <Compile Include="Data\SqlBulkCopyFixture.cs" />
     <Compile Include="Data\SqlDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
+    <Compile Include="LambdasTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
