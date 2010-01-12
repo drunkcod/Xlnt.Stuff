@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xlnt
+namespace Xlnt.Stuff
 {
     public static class Lambdas
     {

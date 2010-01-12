@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Xlnt
+namespace Xlnt.Stuff
 {
     class CaseInsensitiveStringComparer : IEqualityComparer<string>
     {

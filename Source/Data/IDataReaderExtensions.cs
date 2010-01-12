@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
+using Xlnt.Stuff;
 using DataReaderColumn = System.Action<object, System.Data.IDataReader>;
 
 namespace Xlnt.Data
