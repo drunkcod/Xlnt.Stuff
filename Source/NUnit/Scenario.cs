@@ -101,12 +101,19 @@ namespace Xlnt.NUnit
 
         public Scenario<T> When(string stimuli, Func<T> stimulate) {
             SetWhen(stimuli);
-            this.stimulate = Lazy(stimulate);
+            this.stimulate = stimulate;
             return this;
         }
 
         public Scenario<T> Then(string happens, Action<T> check) {
-            var thisStimuli = stimulate;
+            Func<T> next = null;
+            var localStimulate = stimulate;
+            Func<T> thisStimuli = () => {
+                var value = localStimulate();
+                next = () => value;
+                return value;
+            };
+            stimulate = () => next();
             AddTest(Then(happens), () => { check(thisStimuli()); });
             return this;
         }
@@ -115,17 +122,6 @@ namespace Xlnt.NUnit
             var thisStimuli = stimulate;
             AddTest(And(somethingMore), () => { check(thisStimuli()); });
             return this;
-        }
-
-        static Func<T> Lazy<T>(Func<T> func) {
-            Func<T> forced = null;
-            return () => {
-                if(forced != null)
-                    return forced();
-                var value = func();
-                forced = () => value;
-                return value;
-            };
         }
     }
 }
