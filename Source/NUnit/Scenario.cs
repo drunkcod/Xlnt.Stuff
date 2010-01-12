@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using System.Reflection;
-using Xlnt.Stuff;
 
 namespace Xlnt.NUnit
 {
@@ -102,7 +101,7 @@ namespace Xlnt.NUnit
 
         public Scenario<T> When(string stimuli, Func<T> stimulate) {
             SetWhen(stimuli);
-            this.stimulate = Lambdas.Lazy(stimulate);
+            this.stimulate = Lazy(stimulate);
             return this;
         }
 
@@ -118,5 +117,15 @@ namespace Xlnt.NUnit
             return this;
         }
 
+        static Func<T> Lazy<T>(Func<T> func) {
+            Func<T> forced = null;
+            return () => {
+                if(forced != null)
+                    return forced();
+                var value = func();
+                forced = () => value;
+                return value;
+            };
+        }
     }
 }
