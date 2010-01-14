@@ -74,7 +74,7 @@ namespace Xlnt.NUnit
         protected void SetWhen(string stimuli) { this.stimuli = "   When " + stimuli; }
         protected string Then(string happens) { return stimuli + " Then " + happens; }
         protected string And(string somethingMore) { return "    And " + somethingMore; }
-        private string It(string should) { return "  It " + should; }
+        private string It(string should) { return "- " + should; }
 
         IEnumerator<TestCaseData> IEnumerable<TestCaseData>.GetEnumerator() { return tests.GetEnumerator(); }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return tests.GetEnumerator(); }
