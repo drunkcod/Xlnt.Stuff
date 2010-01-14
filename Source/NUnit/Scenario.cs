@@ -109,9 +109,7 @@ namespace Xlnt.NUnit
             T value = default(T);
             var localStimulate = stimulate;
             stimulate = () => value;
-            return AddTest(Then(happens), check, () => {
-                return value = localStimulate();                
-            });
+            return AddTest(Then(happens), check, () => value = localStimulate());
         }
 
         public Scenario<T> And(string somethingMore, Action<T> check) {
@@ -119,7 +117,7 @@ namespace Xlnt.NUnit
         }
 
         Scenario<T> AddTest(string description, Action<T> check, Func<T> thisStimuli) {
-            AddTest(description, () => { check(thisStimuli()); });
+            AddTest(description, () => check(thisStimuli()));
             return this;
         }
     }
