@@ -106,21 +106,20 @@ namespace Xlnt.NUnit
         }
 
         public Scenario<T> Then(string happens, Action<T> check) {
-            Func<T> next = null;
+            T value = default(T);
             var localStimulate = stimulate;
-            Func<T> thisStimuli = () => {
-                var value = localStimulate();
-                next = () => value;
-                return value;
-            };
-            stimulate = () => next();
-            AddTest(Then(happens), () => { check(thisStimuli()); });
-            return this;
+            stimulate = () => value;
+            return AddTest(Then(happens), check, () => {
+                return value = localStimulate();                
+            });
         }
 
         public Scenario<T> And(string somethingMore, Action<T> check) {
-            var thisStimuli = stimulate;
-            AddTest(And(somethingMore), () => { check(thisStimuli()); });
+            return AddTest(And(somethingMore), check, stimulate);
+        }
+
+        Scenario<T> AddTest(string description, Action<T> check, Func<T> thisStimuli) {
+            AddTest(description, () => { check(thisStimuli()); });
             return this;
         }
     }

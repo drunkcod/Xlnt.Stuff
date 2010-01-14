@@ -9,12 +9,12 @@ namespace Xlnt.Stuff
         }
 
         public static Func<T> Lazy<T>(Func<T> func) {
-            Func<T> forced = null;
+            T value = default(T);
             return () => {
-                if(forced != null)
-                    return forced();
-                var value = func();
-                forced = () => value;
+                if(func == null)
+                    return value;
+                value = func();
+                //func = null;
                 return value;
             };
         }

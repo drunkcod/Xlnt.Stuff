@@ -19,5 +19,26 @@ namespace Xlnt.Tests
             lazy(); lazy();
             Assert.That(count, Is.EqualTo(1));
         }
+
+        class RefCount
+        {
+            public static int LiveObjects = 0;
+
+
+            public RefCount() { ++LiveObjects; }
+            ~RefCount() { --LiveObjects; }
+
+            public int Value() { return LiveObjects; }
+        }
+
+        [Test]
+        public void Should_release_target_func_after_force() {
+            var n = new RefCount().Value();
+            var lazy = Lambdas.Lazy<int>(new RefCount().Value);
+            lazy();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.That(RefCount.LiveObjects, Is.EqualTo(0));
+        }
     }
 }
