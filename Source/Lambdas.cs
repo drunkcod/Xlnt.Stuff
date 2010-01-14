@@ -14,7 +14,7 @@ namespace Xlnt.Stuff
                 if(func == null)
                     return value;
                 value = func();
-                //func = null;
+                func = null;
                 return value;
             };
         }

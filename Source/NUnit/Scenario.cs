@@ -26,6 +26,7 @@ namespace Xlnt.NUnit
     {
         readonly List<TestCaseData> tests;
         string stimuli;
+        protected Action establishContext;
 
         public Scenario() {
             this.tests = new List<TestCaseData>();
@@ -35,10 +36,19 @@ namespace Xlnt.NUnit
             AddTest("Scenario: " + description, () => { });
         }
 
-        protected Scenario(Scenario other) { this.tests = other.tests; }
+        protected Scenario(Scenario other) { 
+            this.tests = other.tests;
+            this.establishContext = other.establishContext;
+        }
+
+        public Scenario Before(string weStart, Action before) {
+            AddTest(Before(weStart), before);
+            return this;
+        }
 
         public Scenario Given(string context, Action establishContext) {
-            AddTest(Given(context), establishContext);
+            this.establishContext = establishContext;
+            AddTest(Given(context), () => { });
             return new FixtureContextScenario(this);
         }
 
@@ -59,6 +69,7 @@ namespace Xlnt.NUnit
             tests.Add(new TestCaseData(action).SetName(name));
         }
 
+        protected string Before(string weStart) { return "Before " + weStart; }
         protected string Given(string context) { return "Given " + context; }
         protected void SetWhen(string stimuli) { this.stimuli = "   When " + stimuli; }
         protected string Then(string happens) { return stimuli + " Then " + happens; }
@@ -81,13 +92,14 @@ namespace Xlnt.NUnit
             return this;
         }
 
-        public Scenario Then(string happens, Action check) {
+        public FixtureContextScenario Then(string happens, Action check) {
+            var thisContext = establishContext;         
             var thisStimuli = stimulate;
-            AddTest(Then(happens), () => { thisStimuli(); check(); });
+            AddTest(Then(happens), () => { thisContext(); thisStimuli(); check(); });
             return this;
         }
 
-        public Scenario And(string somethingMore, Action check) {
+        public FixtureContextScenario And(string somethingMore, Action check) {
             AddTest(And(somethingMore), check);
             return this;
         }
@@ -107,9 +119,10 @@ namespace Xlnt.NUnit
 
         public Scenario<T> Then(string happens, Action<T> check) {
             T value = default(T);
-            var localStimulate = stimulate;
+            var thisContext = establishContext;
+            var thisStimulate = stimulate;
             stimulate = () => value;
-            return AddTest(Then(happens), check, () => value = localStimulate());
+            return AddTest(Then(happens), check, () => { thisContext(); return value = thisStimulate(); });
         }
 
         public Scenario<T> And(string somethingMore, Action<T> check) {

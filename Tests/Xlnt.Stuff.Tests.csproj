@@ -8,7 +8,7 @@
     <ProjectGuid>{1417F1E9-2ED9-471B-8E3D-C45C60A00812}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Xlnt.Tests</RootNamespace>
+    <RootNamespace>Xlnt</RootNamespace>
     <AssemblyName>Xlnt.Stuff.Tests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -65,6 +65,7 @@
     <Compile Include="Data\SqlDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
     <Compile Include="LambdasTests.cs" />
+    <Compile Include="NUnitScenarioTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
