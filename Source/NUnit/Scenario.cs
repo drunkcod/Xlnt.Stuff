@@ -24,6 +24,7 @@ namespace Xlnt.NUnit
 
     public class Scenario : IEnumerable<TestCaseData>
     {
+        static readonly Action Nop = () => { };
         readonly List<TestCaseData> tests;
         string stimuli;
         protected Action establishContext;
@@ -33,7 +34,7 @@ namespace Xlnt.NUnit
         }
 
         public Scenario(string description): this() {
-            AddTest("Scenario: " + description, () => { });
+            AddTest("Scenario: " + description, Nop);
         }
 
         protected Scenario(Scenario other) { 
@@ -46,9 +47,14 @@ namespace Xlnt.NUnit
             return this;
         }
 
+        public Scenario Describe<T>() {
+            AddTest(Describe(typeof(T).Name), Nop);
+            return this;
+        }
+
         public Scenario Given(string context, Action establishContext) {
             this.establishContext = establishContext;
-            AddTest(Given(context), () => { });
+            AddTest(Given(context), Nop);
             return new FixtureContextScenario(this);
         }
 
@@ -70,6 +76,7 @@ namespace Xlnt.NUnit
         }
 
         protected string Before(string weStart) { return "Before " + weStart; }
+        protected string Describe(string description) { return description; }
         protected string Given(string context) { return "Given " + context; }
         protected void SetWhen(string stimuli) { this.stimuli = "   When " + stimuli; }
         protected string Then(string happens) { return stimuli + " Then " + happens; }
