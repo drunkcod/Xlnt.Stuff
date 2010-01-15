@@ -140,6 +140,14 @@ namespace Xlnt.NUnit
             return this;
         }
 
+        public Scenario<TContext, T> When<T>(string stimuli, Func<TContext, T> stimulate)
+        {
+            var next = new Scenario<TContext, T>(this, establishContext);
+            next.SetWhen(stimuli);
+            next.stimulate = stimulate;
+            return next;
+        }
+
         public Scenario<TContext,TResult> Then(string happens, Action<TResult> check) {
             TResult value = default(TResult);
             var thisContext = establishContext;

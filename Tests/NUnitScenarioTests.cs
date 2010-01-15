@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Xlnt.NUnit
 {
@@ -36,6 +32,18 @@ namespace Xlnt.NUnit
             .Given("that I establish a implicit context", () => new { Value = 42 })
             .When("when I transform it", x => x)
             .Then("it's possible to use anonymous objects", x => Assert.That(x.Value, Is.EqualTo(42)));
+        }
+
+        public Scenario UsingImplicitContext() {
+            return new Scenario()
+            .Given("that I establish a implicit context", () => new {Value = 2})
+                .When("I just pass it throuhg", x => x)
+                .Then("ignore checking it", x => { })
+                .And("I can later decide to use it", x => Assert.That(x.Value, Is.EqualTo(2)))
+                
+                .When("I transform it", x => new {Answer = 21 * x.Value})
+                .Then("I get the transformed value", x => Assert.That(x.Answer, Is.EqualTo(42)))
+                .And("I can use it multiple times", x => Assert.That(x.Answer, Is.EqualTo(42)));            
         }
     }
 }
