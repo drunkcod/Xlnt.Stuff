@@ -27,7 +27,6 @@ namespace Xlnt.NUnit
         static readonly Action Nop = () => { };
         readonly List<TestCaseData> tests;
         string stimuli;
-        protected Action establishContext;
 
         public Scenario() {
             this.tests = new List<TestCaseData>();
@@ -39,7 +38,6 @@ namespace Xlnt.NUnit
 
         protected Scenario(Scenario other) { 
             this.tests = other.tests;
-            this.establishContext = other.establishContext;
         }
 
         public Scenario Before(string weStart, Action before) {
@@ -53,17 +51,22 @@ namespace Xlnt.NUnit
         }
 
         public Scenario Given(string context, Action establishContext) {
-            this.establishContext = establishContext;
             AddTest(Given(context), Nop);
-            return new FixtureContextScenario(this);
+            return new FixtureContextScenario(this, establishContext);
         }
+
+        public Scenario<T,T> Given<T>(string context, Func<T> establishContext) {
+            AddTest(Given(context), Nop);
+            return new Scenario<T,T>(this, establishContext);
+        }
+
 
         public virtual FixtureContextScenario When(string stimuli, Action stimulate) {
-            return new FixtureContextScenario(this).When(stimuli, stimulate);
+            return new FixtureContextScenario(this, Nop).When(stimuli, stimulate);
         }
 
-        public virtual Scenario<T> When<T>(string stimuli, Func<T> stimulate) {
-            return new Scenario<T>(this).When(stimuli, stimulate);
+        public virtual Scenario<object,T> When<T>(string stimuli, Func<T> stimulate) {          
+            return new Scenario<object, T>(this, IgnoreContextResult()).When(stimuli, x => stimulate());
         }
 
         public Scenario It(string should, Action check) {
@@ -74,6 +77,8 @@ namespace Xlnt.NUnit
         protected void AddTest(string name, Action action) {
             tests.Add(new TestCaseData(action).SetName(name));
         }
+
+        protected virtual Func<object> IgnoreContextResult() { return () => null; }
 
         protected string Before(string weStart) { return "Before " + weStart; }
         protected string Describe(string description) { return description; }
@@ -89,9 +94,12 @@ namespace Xlnt.NUnit
 
     public class FixtureContextScenario : Scenario
     {
+        Action establishContext;
         Action stimulate;
 
-        internal FixtureContextScenario(Scenario other) : base(other) { }
+        internal FixtureContextScenario(Scenario other, Action establishContext) : base(other) {
+            this.establishContext = establishContext;
+        }
 
         public override FixtureContextScenario When(string stimuli, Action stimulate) {
             SetWhen(stimuli);
@@ -110,33 +118,46 @@ namespace Xlnt.NUnit
             AddTest(And(somethingMore), check);
             return this;
         }
+
+        protected override Func<object> IgnoreContextResult() {
+            var thisContext = establishContext;
+            return () => { thisContext(); return null; }; 
+        }
     }
 
-    public class Scenario<T> : Scenario
+    public class Scenario<TContext,TResult> : Scenario
     {
-        Func<T> stimulate;
+        Func<TContext> establishContext;
+        Func<TContext,TResult> stimulate;
 
-        internal Scenario(Scenario other): base(other) { }
+        internal Scenario(Scenario other, Func<TContext> establishContext): base(other) {
+            this.establishContext = establishContext;
+        }
 
-        public Scenario<T> When(string stimuli, Func<T> stimulate) {
+        public Scenario<TContext,TResult> When(string stimuli, Func<TContext,TResult> stimulate) {
             SetWhen(stimuli);
             this.stimulate = stimulate;
             return this;
         }
 
-        public Scenario<T> Then(string happens, Action<T> check) {
-            T value = default(T);
+        public Scenario<TContext,TResult> Then(string happens, Action<TResult> check) {
+            TResult value = default(TResult);
             var thisContext = establishContext;
             var thisStimulate = stimulate;
-            stimulate = () => value;
-            return AddTest(Then(happens), check, () => { thisContext(); return value = thisStimulate(); });
+            stimulate = x => value;
+            return AddTest(Then(happens), check, () => { return value = thisStimulate(thisContext()); });
         }
 
-        public Scenario<T> And(string somethingMore, Action<T> check) {
-            return AddTest(And(somethingMore), check, stimulate);
+        public Scenario<TContext,TResult> And(string somethingMore, Action<TResult> check) {
+            return AddTest(And(somethingMore), check, () => stimulate(default(TContext)));
         }
 
-        Scenario<T> AddTest(string description, Action<T> check, Func<T> thisStimuli) {
+        protected override Func<object> IgnoreContextResult() { 
+            var thisContext = establishContext;
+            return () => { thisContext(); return null; };
+        }
+
+        Scenario<TContext,TResult> AddTest(string description, Action<TResult> check, Func<TResult> thisStimuli) {
             AddTest(description, () => check(thisStimuli()));
             return this;
         }
