@@ -132,25 +132,32 @@ namespace Xlnt.NUnit
         }
 
         public Scenario<TContext,TResult> When<TResult>(string stimuli, Func<TContext,TResult> stimulate) {
-            var next = new Scenario<TContext,TResult>(this, establishContext);
-            return next.When(stimuli, stimulate);
+            return ToScenario<TResult>().When(stimuli, stimulate);
         }
 
         public Scenario<TContext,TContext> When(string stimuli, Action<TContext> stimulate) {
-            var next = new Scenario<TContext, TContext>(this, establishContext);
-            TContext context = default(TContext);
-            var thisContext = establishContext;
-            Func<TContext> first = () => { return context = thisContext(); };
-            return next.When(stimuli, x => { stimulate(first()); return context; });
+            var thisContext = PrepareThen();
+            return ToScenario<TContext>().When(stimuli, x => { stimulate(thisContext()); return thisContext(); });
         }
 
+        Scenario<TContext, TResult> ToScenario<TResult>() { return new Scenario<TContext, TResult>(this, establishContext); }
+
         public ScenarioContext<TContext> Then(string happens, Action<TContext> check) {
-            TContext value = default(TContext);
-            var thisContext = establishContext;
-            stimulate = () => value;
-            Func<TContext> first = () => { return value = thisContext(); };
-            AddTest(Then(happens), () => check(first()));
+            var thisContext = PrepareThen();
+            AddTest(Then(happens), () => check(thisContext()));
             return this;
+        }
+
+        Func<TContext> PrepareThen() {
+            TContext value = default(TContext);
+            var localContext = establishContext;
+            var thisContext = localContext;
+            establishContext = () => { thisContext = localContext; return localContext(); };
+            return stimulate = () => {
+                if(thisContext != null)
+                    value = thisContext();
+                thisContext = null;
+                return value; };
         }
 
         public ScenarioContext<TContext> And(string somethingMore, Action<TContext> check) {
