@@ -27,7 +27,10 @@ namespace Xlnt.Data
         }
 
         static string GetName(Expression expression) {
-            return ((MemberExpression)expression).Member.Name;
+            var memberExpression = expression as MemberExpression;
+            if(memberExpression != null)
+                return memberExpression.Member.Name;
+            return ((MemberExpression)((UnaryExpression)expression).Operand).Member.Name;
         }
 
         //Since F# doesn't autobox return values this is here for convinence.
