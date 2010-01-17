@@ -20,6 +20,12 @@ namespace Xlnt.Tests
             Assert.That(count, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Box_should_not_wrap_already_boxed_object() {
+            Func<int, object> fun = x => null;
+            Assert.That(Lambdas.Box(fun), Is.SameAs(fun));
+        }
+
         class RefCount
         {
             public static int LiveObjects = 0;

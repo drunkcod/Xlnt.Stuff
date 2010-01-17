@@ -5,6 +5,8 @@ namespace Xlnt.Stuff
     public static class Lambdas
     {
         public static Func<T, object> Box<T, TAny>(Func<T, TAny> func) {
+            if(typeof(TAny) == typeof(object))
+                return func as Func<T, object>;
             return x => func(x);
         }
 
