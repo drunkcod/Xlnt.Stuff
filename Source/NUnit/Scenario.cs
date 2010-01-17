@@ -55,11 +55,10 @@ namespace Xlnt.NUnit
             return new FixtureContextScenario(this, establishContext);
         }
 
-        public Scenario<T,T> Given<T>(string context, Func<T> establishContext) {
+        public ScenarioContext<T> Given<T>(string context, Func<T> establishContext) {
             AddTest(Given(context), Nop);
-            return new Scenario<T,T>(this, establishContext);
+            return new ScenarioContext<T>(this, establishContext);
         }
-
 
         public virtual FixtureContextScenario When(string stimuli, Action stimulate) {
             return new FixtureContextScenario(this, Nop).When(stimuli, stimulate);
@@ -125,14 +124,49 @@ namespace Xlnt.NUnit
         }
     }
 
-    public class Scenario<TContext,TResult> : Scenario
+    public class ScenarioContext<TContext> : Scenario
     {
-        Func<TContext> establishContext;
-        Func<TContext,TResult> stimulate;
-
-        internal Scenario(Scenario other, Func<TContext> establishContext): base(other) {
+        protected Func<TContext> establishContext;
+        Func<TContext> stimulate;
+        
+        internal ScenarioContext(Scenario other, Func<TContext> establishContext): base(other) {
             this.establishContext = establishContext;
         }
+
+        public Scenario<TContext,TResult> When<TResult>(string stimuli, Func<TContext,TResult> stimulate) {
+            var next = new Scenario<TContext,TResult>(this, establishContext);
+            return next.When(stimuli, stimulate);
+        }
+
+        public Scenario<TContext,TContext> When(string stimuli, Action<TContext> stimulate) {
+            var next = new Scenario<TContext, TContext>(this, establishContext);
+            TContext context = default(TContext);
+            var thisContext = establishContext;
+            Func<TContext> first = () => { return context = thisContext(); };
+            return next.When(stimuli, x => { stimulate(first()); return context; });
+        }
+
+        public ScenarioContext<TContext> Then(string happens, Action<TContext> check) {
+            TContext value = default(TContext);
+            var thisContext = establishContext;
+            stimulate = () => value;
+            Func<TContext> first = () => { return value = thisContext(); };
+            AddTest(Then(happens), () => check(first()));
+            return this;
+        }
+
+        public ScenarioContext<TContext> And(string somethingMore, Action<TContext> check) {
+            var thisStimulate = stimulate;
+            AddTest(And(somethingMore), () => check(thisStimulate()));
+            return this;
+        }
+    }
+
+    public class Scenario<TContext,TResult> : ScenarioContext<TContext>
+    {
+        Func<TContext,TResult> stimulate;
+
+        internal Scenario(Scenario other, Func<TContext> establishContext): base(other, establishContext) {}
 
         public Scenario<TContext,TResult> When(string stimuli, Func<TContext,TResult> stimulate) {
             SetWhen(stimuli);
@@ -140,14 +174,7 @@ namespace Xlnt.NUnit
             return this;
         }
 
-        public Scenario<TContext, TContext> When(string stimuli, Action<TContext> stimulate) {
-            var next = new Scenario<TContext, TContext>(this, establishContext);
-            next.SetWhen(stimuli);
-            next.stimulate = x => { stimulate(x); return x; };
-            return next;
-        }
-
-        public Scenario<TContext, T> When<T>(string stimuli, Func<TContext, T> stimulate)
+        new public Scenario<TContext, T> When<T>(string stimuli, Func<TContext, T> stimulate)
         {
             var next = new Scenario<TContext, T>(this, establishContext);
             next.SetWhen(stimuli);

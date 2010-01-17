@@ -46,7 +46,9 @@ namespace Xlnt.NUnit
                 .And("I can use it multiple times", x => Assert.That(x.Answer, Is.EqualTo(42)))
 
                 .When("I don't return anything", x => { })
-                .Then("I still get passed the context", x => Assert.That(x.Value, Is.EqualTo(2)));
+                .Then("I still get passed the context", x => Assert.That(x.Value, Is.EqualTo(2)))
+            .Given("an implicit context", () => new[] { 1 })
+            .Then("it's possible to skip the When", context => Assert.That(context, Is.EqualTo(new[] { 1 })));
         }
     }
 }

@@ -1,19 +1,20 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
+using Xlnt.NUnit;
 
 namespace Xlnt.Stuff.Tests
 {
-    public class IEnumerableExtensionsTests
+    [TestFixture]
+    public class IEnumerableExtensionsTests : ScenarioFixture
     {
-        [Test]
-        public void Each_should_enumerate_all_values()
-        {
-            var items = new[] {1, 2, 3};
-            var target = new List<int>();
-
-            items.ForEach(target.Add);
-
-            Assert.That(target, Is.EqualTo(items));
+        public Scenario Extensions() {
+            return new Scenario()
+                .Given("a sample sequence [1,2,3]", () => new[] { 1, 2, 3 })
+                .Then("ForEach enumerates all values", items => {
+                    var target = new List<int>();
+                    items.ForEach(target.Add);
+                    Assert.That(target, Is.EqualTo(items));
+                });
         }
     }
 }
