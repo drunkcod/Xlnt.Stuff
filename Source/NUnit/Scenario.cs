@@ -105,9 +105,7 @@ namespace Xlnt.NUnit
         }
 
         public FixtureContextScenario Then(string happens, Action check) {
-            var thisContext = establishContext;         
-            var thisStimuli = stimulate;
-            AddTest(Then(happens), () => { thisContext(); thisStimuli(); check(); });
+            AddTest(Then(happens), establishContext + stimulate + check);
             return this;
         }
 
