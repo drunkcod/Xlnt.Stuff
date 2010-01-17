@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Data;
 using System.Linq.Expressions;
 using Xlnt.Data;
+using Xlnt.NUnit;
 
 namespace Xlnt.Tests.Data
 {
@@ -48,6 +49,28 @@ namespace Xlnt.Tests.Data
                 ++count;
 
             Assert.That(count, Is.EqualTo(SomeRows.Length));
+        }
+
+        class TypeWithFieldsAndProperties
+        {
+            public int SomeField;
+            int PrivateField;
+            public int SomeProperty { get; set; }
+        }
+
+        [TestCaseSource("FieldMappingTests")]
+        public void Scenarios(Action act){ act(); }
+
+        public Scenario FieldMappingTests() {
+            return new Scenario()
+            .Given("a CollectionDataReader for a type with fields and propperties", () =>
+                new[] { new TypeWithFieldsAndProperties { SomeField = 1, SomeProperty = 2} }.AsDataReader())
+                .When("I MapAll", x => { x.MapAll(); x.Read(); })
+                .Then("fields are mapped", x => Assert.True(x.ColumnMappings.Any(field => field.Name == "SomeField")))
+                .And("fields are readable", x => Assert.That(x.GetValue(x.GetOrdinal("SomeField")), Is.EqualTo(1)))
+                .And("properties are mapped", x => Assert.True(x.ColumnMappings.Any(field => field.Name == "SomeProperty")))
+                .And("properties are readable", x => Assert.That(x.GetValue(x.GetOrdinal("SomeProperty")), Is.EqualTo(2)))
+                .And("the number of columns matches public fields + properties", x => Assert.That(x.ColumnMappings.Count, Is.EqualTo(2)));
         }
     }
 }

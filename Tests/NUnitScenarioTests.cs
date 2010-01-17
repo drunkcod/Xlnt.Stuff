@@ -36,14 +36,17 @@ namespace Xlnt.NUnit
 
         public Scenario UsingImplicitContext() {
             return new Scenario()
-            .Given("that I establish a implicit context", () => new {Value = 2})
+            .Given("that I establish a implicit context", () => new { Value = 2 })
                 .When("I just pass it throuhg", x => x)
                 .Then("ignore checking it", x => { })
                 .And("I can later decide to use it", x => Assert.That(x.Value, Is.EqualTo(2)))
-                
-                .When("I transform it", x => new {Answer = 21 * x.Value})
+
+                .When("I transform it", x => new { Answer = 21 * x.Value })
                 .Then("I get the transformed value", x => Assert.That(x.Answer, Is.EqualTo(42)))
-                .And("I can use it multiple times", x => Assert.That(x.Answer, Is.EqualTo(42)));            
+                .And("I can use it multiple times", x => Assert.That(x.Answer, Is.EqualTo(42)))
+
+                .When("I don't return anything", x => { })
+                .Then("I still get passed the context", x => Assert.That(x.Value, Is.EqualTo(2)));
         }
     }
 }

@@ -5,20 +5,24 @@ using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
-    public class FieldCollection<T>
+    public struct Field<T>
     {
-        struct Field
-        {
-            public string Name;
-            public Func<T, object> Read;
+        public Field(string name, Func<T, object> read) {
+            this.Name = name;
+            this.Read = read;
         }
 
-        readonly List<Field> fields = new List<Field>();
+        public readonly string Name;
+        public readonly Func<T, object> Read;
+    }
+
+    public class FieldCollection<T> : IEnumerable<Field<T>>
+    {
+        readonly List<Field<T>> fields = new List<Field<T>>();
 
         public int Count { get { return fields.Count; } }
 
-        public FieldCollection<T> Add<TAny>(Expression<Func<T, TAny>> column)
-        {
+        public FieldCollection<T> Add<TAny>(Expression<Func<T, TAny>> column) {
             return Add(GetName(column.Body), Lambdas.Box(column.Compile()));
         }
 
@@ -32,15 +36,19 @@ namespace Xlnt.Data
         }
 
         public FieldCollection<T> Add(string name, Func<T, object> read) {
-            fields.Add(new Field {
-                Name = name,
-                Read = read
-            });
+            fields.Add(new Field<T>(name, read));
             return this;
         }
 
         public string GetName(int i) { return fields[i].Name; }
         public Func<T, object> GetReader(int i) { return fields[i].Read; }
         public object Read(T item, int i) { return GetReader(i)(item); }
+
+        #region IEnumerable<T> Members
+
+        IEnumerator<Field<T>> IEnumerable<Field<T>>.GetEnumerator() { return fields.GetEnumerator(); }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return fields.GetEnumerator(); }
+
+        #endregion
     }
 }
