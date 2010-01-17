@@ -41,13 +41,11 @@ namespace Xlnt.NUnit
         }
 
         public Scenario Before(string weStart, Action before) {
-            AddTest(Before(weStart), before);
-            return this;
+            return AddTest(Before(weStart), before);
         }
 
         public Scenario Describe<T>() {
-            AddTest(Describe(typeof(T).Name), Nop);
-            return this;
+            return AddTest(Describe(typeof(T).Name), Nop);
         }
 
         public Scenario Given(string context, Action establishContext) {
@@ -69,12 +67,12 @@ namespace Xlnt.NUnit
         }
 
         public Scenario It(string should, Action check) {
-            AddTest(It(should), check);
-            return this;
+            return AddTest(It(should), check);
         }
 
-        protected void AddTest(string name, Action action) {
+        protected Scenario AddTest(string name, Action action) {
             tests.Add(new TestCaseData(action).SetName(name));
+            return this;
         }
 
         protected virtual Func<object> IgnoreContextResult() { return () => null; }
@@ -172,14 +170,6 @@ namespace Xlnt.NUnit
             SetWhen(stimuli);
             this.stimulate = stimulate;
             return this;
-        }
-
-        new public Scenario<TContext, T> When<T>(string stimuli, Func<TContext, T> stimulate)
-        {
-            var next = new Scenario<TContext, T>(this, establishContext);
-            next.SetWhen(stimuli);
-            next.stimulate = stimulate;
-            return next;
         }
 
         public Scenario<TContext,TResult> Then(string happens, Action<TResult> check) {
