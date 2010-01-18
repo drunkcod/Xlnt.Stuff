@@ -7,8 +7,15 @@ using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
-    public  class CollectionDataReader<T> : DataReaderBase
+    public interface ICollectionDataReader : IDataReader
     {
+        IEnumerable<string> ColumnNames { get; }
+        void MapAll();
+    }
+
+    public  class CollectionDataReader<T> : DataReaderBase, ICollectionDataReader
+    {
+        const BindingFlags MappedMembers = BindingFlags.Public | BindingFlags.Instance;
         readonly IEnumerator<T> items;
         FieldCollection<T> columns = new FieldCollection<T>();
 
@@ -24,16 +31,23 @@ namespace Xlnt.Data
         public override bool Read() { return items.MoveNext(); }
 
         public void MapAll() {
-            typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance).ForEach(field => ColumnMappings.Add(GetField(field)));
-            typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).ForEach(property => ColumnMappings.Add(GetProperty(property)));
+            typeof(T).GetFields(MappedMembers).ForEach(Map);
+            typeof(T).GetProperties(MappedMembers).ForEach(Map);
         }
 
-        Expression<Func<T,object>> GetField(FieldInfo field) {
-            return LambdaBox(parameter => Expression.Field(parameter, field));
+        IEnumerable<string> ICollectionDataReader.ColumnNames {
+            get {
+                foreach(var item in columns)
+                    yield return item.Name;
+            }
         }
 
-        Expression<Func<T, object>> GetProperty(PropertyInfo property) {
-            return LambdaBox(parameter => Expression.Property(parameter, property));
+        void Map(MemberInfo member) {
+            ColumnMappings.Add(GetMember(member));
+        }
+
+        Expression<Func<T,object>> GetMember(MemberInfo member) {
+            return LambdaBox(parameter => Expression.MakeMemberAccess(parameter, member));
         }
 
         Expression<Func<T, object>> LambdaBox(Func<ParameterExpression,MemberExpression> getMember) {
