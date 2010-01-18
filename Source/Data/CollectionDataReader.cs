@@ -7,13 +7,7 @@ using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
-    public interface ICollectionDataReader : IDataReader
-    {
-        IEnumerable<string> ColumnNames { get; }
-        void MapAll();
-    }
-
-    public  class CollectionDataReader<T> : DataReaderBase, ICollectionDataReader
+    public  class CollectionDataReader<T> : DataReaderBase
     {
         const BindingFlags MappedMembers = BindingFlags.Public | BindingFlags.Instance;
         readonly IEnumerator<T> items;
@@ -33,13 +27,6 @@ namespace Xlnt.Data
         public void MapAll() {
             typeof(T).GetFields(MappedMembers).ForEach(Map);
             typeof(T).GetProperties(MappedMembers).ForEach(Map);
-        }
-
-        IEnumerable<string> ICollectionDataReader.ColumnNames {
-            get {
-                foreach(var item in columns)
-                    yield return item.Name;
-            }
         }
 
         void Map(MemberInfo member) {
