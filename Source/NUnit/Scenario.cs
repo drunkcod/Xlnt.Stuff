@@ -36,7 +36,7 @@ namespace Xlnt.NUnit
             AddTest("Scenario: " + description, Nop);
         }
 
-        protected Scenario(Scenario other) { 
+        protected Scenario(Scenario other) {
             this.tests = other.tests;
         }
 
@@ -62,7 +62,7 @@ namespace Xlnt.NUnit
             return new FixtureContextScenario(this, Nop).When(stimuli, stimulate);
         }
 
-        public virtual Scenario<object,T> When<T>(string stimuli, Func<T> stimulate) {          
+        public virtual Scenario<object,T> When<T>(string stimuli, Func<T> stimulate) {
             return new Scenario<object, T>(this, IgnoreContextResult()).When(stimuli, x => stimulate());
         }
 
@@ -116,7 +116,7 @@ namespace Xlnt.NUnit
 
         protected override Func<object> IgnoreContextResult() {
             var thisContext = establishContext;
-            return () => { thisContext(); return null; }; 
+            return () => { thisContext(); return null; };
         }
     }
 
@@ -124,7 +124,7 @@ namespace Xlnt.NUnit
     {
         protected Func<TContext> establishContext;
         Func<TContext> stimulate;
-        
+
         internal ScenarioContext(Scenario other, Func<TContext> establishContext): base(other) {
             this.establishContext = establishContext;
         }
@@ -189,7 +189,7 @@ namespace Xlnt.NUnit
             return AddTest(And(somethingMore), check, () => stimulate(default(TContext)));
         }
 
-        protected override Func<object> IgnoreContextResult() { 
+        protected override Func<object> IgnoreContextResult() {
             var thisContext = establishContext;
             return () => { thisContext(); return null; };
         }
