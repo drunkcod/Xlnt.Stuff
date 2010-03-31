@@ -8,6 +8,11 @@ namespace Xlnt.Web.Mvc
 {
     public static class UrlHelperExtensions
     {
+        public static string Absolute(this UrlHelper self, string url) {
+            //this is a complete train-wreck.. somewhere demeter is crying.
+            return self.RequestContext.HttpContext.Request.Url.GetLeftPart(UriPartial.Authority) + url;
+        }
+
         public static string Action(this UrlHelper self, Expression<Action> expr) {
             var method = (MethodCallExpression)expr.Body;
             var routeValues = new RouteValueDictionary();
