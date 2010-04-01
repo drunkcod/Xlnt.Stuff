@@ -40,7 +40,11 @@ namespace Xlnt.Web.Mvc
             var url = UrlHelperFor("Multiple");
             Assert.That(url.Action(() => Foo(7, "Moar")), Is.EqualTo("/Multiple/7/Foo/Moar"));
         }
-
+        [Test]
+        public void AbsoluteUrl() {
+            var url = UrlHelperFor("Foo");
+            Assert.That(url.Absolute("/"), Is.EqualTo("http://localhost/"));
+        }
         string Indirect<T>(T value, Func<T, string> block) { return block(value); }
 
         void Index(int id) { }
@@ -52,6 +56,7 @@ namespace Xlnt.Web.Mvc
                 var request = new Mock<HttpRequestBase>(MockBehavior.Strict);
                 request.SetupGet(x => x.ApplicationPath).Returns("/");
                 request.SetupGet(x => x.ServerVariables).Returns(new NameValueCollection());
+                request.SetupGet(x => x.Url).Returns(new Uri("http://localhost/"));
                 return request.Object;
             });
             var response = new Mock<HttpResponseBase>();
