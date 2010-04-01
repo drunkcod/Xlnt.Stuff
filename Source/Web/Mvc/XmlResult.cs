@@ -10,8 +10,8 @@ namespace Xlnt.Web.Mvc
         XmlSerializer serializer;
         object value;
 
-        public static XmlResult From<T>(T value) {
-            var serializer = new XmlSerializer(typeof(T), "");
+        public static XmlResult From(object value) {
+            var serializer = new XmlSerializer(value.GetType(), "");
             return new XmlResult {
                 serializer = serializer,
                 value = value
