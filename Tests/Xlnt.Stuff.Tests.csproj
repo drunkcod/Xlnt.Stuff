@@ -74,6 +74,8 @@
     <Compile Include="LambdasTests.cs" />
     <Compile Include="NUnitScenarioTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
+    <Compile Include="Web\Mvc\BasicControllerFactoryTests.cs" />
+    <Compile Include="Web\Mvc\MissingControllerTests.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>

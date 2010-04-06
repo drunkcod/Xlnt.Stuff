@@ -67,6 +67,8 @@
     <Compile Include="Lambdas.cs" />
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
+    <Compile Include="Web\Mvc\BasicControllerFactory.cs" />
+    <Compile Include="Web\Mvc\MissingController.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensions.cs" />
     <Compile Include="Web\Mvc\XmlResult.cs" />
     <Compile Include="Web\Mvc\XmlServiceAttribute.cs" />

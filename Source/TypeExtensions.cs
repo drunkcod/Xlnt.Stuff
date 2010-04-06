@@ -17,5 +17,7 @@ namespace Xlnt.Stuff
         static T New<T>(Type self, Type[] types, object[] args){
             return (T)self.GetConstructor(types).Invoke(args);
         }
+
+        public static bool IsTypeOf<T>(this Type type) { return typeof(T).IsAssignableFrom(type); }
     }
 }
