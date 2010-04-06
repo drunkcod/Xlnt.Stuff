@@ -7,13 +7,14 @@ namespace Xlnt.Web.Mvc
 {
     public class XmlResult : ActionResult
     {
+        public const string ContentType = "text/xml";
         object value;
 
         public XmlResult(object value) { this.value = value; }
 
         public override void ExecuteResult(ControllerContext context) {
             var response = context.HttpContext.Response;
-            response.ContentType = "text/xml";
+            response.ContentType = ContentType;
             response.ContentEncoding = Encoding.UTF8;
 
             var ns = new XmlSerializerNamespaces();

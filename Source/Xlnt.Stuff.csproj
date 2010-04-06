@@ -69,6 +69,7 @@
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensions.cs" />
     <Compile Include="Web\Mvc\XmlResult.cs" />
+    <Compile Include="Web\Mvc\XmlServiceAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
