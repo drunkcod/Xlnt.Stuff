@@ -66,6 +66,7 @@
     <Compile Include="IO\LineReader.cs" />
     <Compile Include="Lambdas.cs" />
     <Compile Include="ObjectExtensions.cs" />
+    <Compile Include="Threading\ReaderWriterLockExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
     <Compile Include="Web\Mvc\BasicControllerFactory.cs" />
     <Compile Include="Web\Mvc\MissingController.cs" />

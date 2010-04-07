@@ -45,6 +45,14 @@ namespace Xlnt.Web.Mvc
             var url = UrlHelperFor("Foo");
             Assert.That(url.Absolute("/"), Is.EqualTo("http://localhost/"));
         }
+
+        public static int DefaultId = 3;
+
+        [Test]
+        public void Should_handle_static_fields() {
+            var url = UrlHelperFor("Foo");
+            Assert.That(url.Action(() => Index(DefaultId)), Is.EqualTo("/Foo/" + DefaultId + "/Index"));
+        }
         string Indirect<T>(T value, Func<T, string> block) { return block(value); }
 
         void Index(int id) { }

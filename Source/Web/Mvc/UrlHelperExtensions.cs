@@ -25,6 +25,9 @@ namespace Xlnt.Web.Mvc
         }
 
         static object Value(Expression expr) {
+            if(expr == null)
+                return null;
+
             switch(expr.NodeType) {
                 case ExpressionType.Constant: return (expr as ConstantExpression).Value;
                 case ExpressionType.MemberAccess:
