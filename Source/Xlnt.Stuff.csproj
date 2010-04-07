@@ -71,6 +71,7 @@
     <Compile Include="Web\Mvc\BasicControllerFactory.cs" />
     <Compile Include="Web\Mvc\MissingController.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensions.cs" />
+    <Compile Include="Web\Mvc\XmlModelBinder.cs" />
     <Compile Include="Web\Mvc\XmlResult.cs" />
     <Compile Include="Web\Mvc\XmlServiceAttribute.cs" />
   </ItemGroup>

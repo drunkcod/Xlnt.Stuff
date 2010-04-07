@@ -19,7 +19,7 @@ namespace Xlnt.Web.Mvc
         static bool UnsupportedAcceptType(IEnumerable<string> acceptTypes) {
             if (acceptTypes == null)
                 return true;
-            return !acceptTypes.Any(item => XmlResult.ContentType.Equals(item));
+            return !acceptTypes.Any(item => XmlResult.SupportsContentType(item));
         }
     }
 }
