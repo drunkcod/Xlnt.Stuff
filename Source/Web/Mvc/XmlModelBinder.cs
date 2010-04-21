@@ -2,7 +2,7 @@
 
 namespace Xlnt.Web.Mvc
 {
-    class XmlModelBinder : IModelBinder
+    public class XmlModelBinder : IModelBinder
     {
         public object BindModel(ControllerContext controllerContext, ModelBindingContext bindingContext) {
             var request = controllerContext.RequestContext.HttpContext.Request;
