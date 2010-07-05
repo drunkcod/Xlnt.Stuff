@@ -27,16 +27,16 @@ namespace Xlnt.Data
         public FieldCollection<T> ColumnMappings { get { return columns; } }
 
         public void WriteAll(IEnumerable<T> collection){
-            WriteHeaders();
+            if (WriteHeader)
+                WriteHeaders();
             collection.ForEach(WriteRecord);
         }
 
-        void WriteHeaders(){
-            if(WriteHeader)
-                WriteColumns((name, read) => name);
+        public void WriteHeaders() {
+            WriteColumns((name, read) => name);
         }
 
-        void WriteRecord(T item){
+        public void WriteRecord(T item) {
             WriteColumns((name, read) => Sanitize(read(item).ToString()));
         }
 

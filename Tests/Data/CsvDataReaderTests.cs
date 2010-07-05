@@ -50,6 +50,13 @@ namespace Xlnt.Data
             Assert.That(new[] { csv.GetOrdinal("Id"), csv.GetOrdinal("Value") }, Is.EqualTo(new[] { 0, 1 }));            
         }
         [Test]
+        public void handle_escaped_fields() {
+            var csv = CsvDataReader.Parse("\",\\\"");
+            csv.ReadHeader();
+
+            Assert.That(csv.GetName(0), Is.EqualTo(",\""));
+        }
+        [Test]
         public void field_ordinals_give_predecence_to_case_sensative_matches(){
             var csv = CsvDataReader.Parse("id,Id");
             csv.ReadHeader();
@@ -66,13 +73,6 @@ namespace Xlnt.Data
             var csv = CsvDataReader.Parse("id");
             csv.ReadHeader();
             Assert.Throws(typeof(IndexOutOfRangeException), () => csv.GetOrdinal("MissingField"));            
-        }
-        [Test]
-        public void should_dispose_line_reader(){
-            var mock = new Mock<ILineReader>();
-            using (new CsvDataReader(mock.Object))
-            { }                            
-            mock.Verify(x => x.Dispose());
         }
         [Test]
         public void should_support_different_separators(){

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Xlnt.IO;
 using Xlnt.Stuff;
+using System.Collections.Generic;
 
 namespace Xlnt.Data
 {
@@ -9,14 +10,12 @@ namespace Xlnt.Data
     {
         static readonly char[] DefaultSeparator = new[]{','};
 
-        readonly ILineReader reader;
+        readonly TextReader reader;
         string[] values;
         string[] fields;
         char[] separator = DefaultSeparator;
         
-        public CsvDataReader(TextReader reader): this(new LineReader(reader)){}
-
-        public CsvDataReader(ILineReader reader){
+        public CsvDataReader(TextReader reader) {
             this.reader = reader;
         }
 
@@ -61,10 +60,50 @@ namespace Xlnt.Data
         protected override void DisposeCore() { reader.Dispose(); }
 
         string[] ReadLine(){
-            var line = reader.ReadLine();
-            if (string.IsNullOrEmpty(line))
+            var buff = new char[MaxFieldLength];
+            var offset = 0;
+            var start = 0;
+            var items = new List<string>();
+            char prev, curr = default(char);
+            var curb = new char[1];
+            bool inEscaped = false;
+            for (; ; ) {
+                prev = curr;
+                if (reader.Read(curb, 0, 1) == 0)
+                    break;
+                curr = curb[0];
+                if (inEscaped) {
+                    if (curr == '"')
+                        if (prev != '\\')
+                            inEscaped = false;
+                        else {
+                            offset -= 1;
+                        }
+                }
+                else {
+                    if (curr == '\r')
+                        continue;
+                    if (curr == '\n')
+                        break;
+                    else if (curr == Separator)
+                    {
+                        items.Add(new String(buff, start, offset - start));
+                        offset = 0;
+                        start = 1;
+                    }
+                    else if (curr == '"') {
+                        inEscaped = true;
+                        start += 1;
+                    }
+                }
+                buff[offset++] = curr;
+            }
+            if (items.Count == 0 && offset == 0)
                 return new string[0];
-            return line.Split(separator);
+            items.Add(new String(buff, start, offset - start));
+            return items.ToArray();
         }
+
+        const int MaxFieldLength = 4096;
     }
 }
