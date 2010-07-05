@@ -64,8 +64,8 @@ namespace Xlnt.Tests.Data
         [Test]
         public void should_dispose_line_reader(){
             var mock = new Mock<ILineReader>();
-            using(new CsvDataReader(mock.Object))
-                ;            
+            using (new CsvDataReader(mock.Object))
+            { }                            
             mock.Verify(x => x.Dispose());
         }
         [Test]

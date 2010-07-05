@@ -55,7 +55,7 @@ namespace Xlnt.Tests.Data
         {
             public int SomeField;
             int PrivateField;
-            public int SomeProperty { get; set; }
+            public int SomeProperty { get { return PrivateField; } set { PrivateField = value; } }
         }
 
         [TestCaseSource("FieldMappingTests")]

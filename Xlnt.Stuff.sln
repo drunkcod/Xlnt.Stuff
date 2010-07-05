@@ -1,9 +1,11 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Stuff", "Source\Xlnt.Stuff.csproj", "{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Stuff.Tests", "Tests\Xlnt.Stuff.Tests.csproj", "{1417F1E9-2ED9-471B-8E3D-C45C60A00812}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Web", "Source\Web\Xlnt.Web.csproj", "{F8901B87-E944-4901-B8F7-44EE26F3D7D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,6 +21,10 @@ Global
 		{1417F1E9-2ED9-471B-8E3D-C45C60A00812}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1417F1E9-2ED9-471B-8E3D-C45C60A00812}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1417F1E9-2ED9-471B-8E3D-C45C60A00812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8901B87-E944-4901-B8F7-44EE26F3D7D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8901B87-E944-4901-B8F7-44EE26F3D7D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8901B87-E944-4901-B8F7-44EE26F3D7D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8901B87-E944-4901-B8F7-44EE26F3D7D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
