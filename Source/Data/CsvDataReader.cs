@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Xlnt.IO;
 using Xlnt.Stuff;
@@ -21,7 +22,12 @@ namespace Xlnt.Data
 
         public static CsvDataReader Parse(string s) { return new CsvDataReader(new StringReader(s)); }
 
-        public override int FieldCount { get { return fields.Length; } }
+        public override int FieldCount { 
+            get {
+                if (fields == null) throw new InvalidOperationException("Must call ReadHeader or SetFieldCount before accessing fields by name.");
+                return fields.Length; 
+            } 
+        }
         
         public char Separator
         {

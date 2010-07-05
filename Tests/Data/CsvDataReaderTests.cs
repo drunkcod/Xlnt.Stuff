@@ -37,6 +37,12 @@ namespace Xlnt.Data
             Assert.That(new[]{csv.GetName(0), csv.GetName(1)}, Is.EqualTo(new[]{"Id", "Value"}));
         }
         [Test]
+        public void throws_InvalidOperationExcetion_if_ReadHeader_or_SetFieldCount_not_called_before_FieldCount_is_used() {
+            var csv = CsvDataReader.Parse("Id,Value");
+
+            Assert.Throws(typeof(InvalidOperationException), () => { var x = csv.FieldCount; });
+        }
+        [Test]
         public void field_ordinals_match_header_ordering(){
             var csv = CsvDataReader.Parse("Id,Value");
             csv.ReadHeader();
