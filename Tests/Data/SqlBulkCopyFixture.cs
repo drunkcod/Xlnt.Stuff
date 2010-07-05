@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using System.Collections.Generic;
 using NUnit.Framework;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class SqlBulkCopyFixture
     {

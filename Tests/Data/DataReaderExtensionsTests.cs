@@ -8,7 +8,7 @@ using Xlnt.Stuff;
 using System.Data;
 using System.Reflection;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class DataReaderExtensionsTests
     {

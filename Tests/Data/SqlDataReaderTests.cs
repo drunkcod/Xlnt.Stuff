@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class SqlDataReaderTests : SqlBulkCopyFixture
     {

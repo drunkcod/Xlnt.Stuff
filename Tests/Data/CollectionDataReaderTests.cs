@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 using Xlnt.Data;
 using Xlnt.NUnit;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class CollectionDataReaderTests : SqlBulkCopyFixture
     {

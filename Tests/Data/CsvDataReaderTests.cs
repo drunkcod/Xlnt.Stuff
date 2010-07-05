@@ -6,7 +6,7 @@ using NUnit.Framework.Constraints;
 using Xlnt.Data;
 using Xlnt.IO;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class CsvDataReaderTests
     {

@@ -130,7 +130,7 @@ namespace Xlnt.Data
         }
 
         object IDataRecord.this[string name] {
-            get { throw new NotImplementedException(); }
+            get { return GetValue(GetOrdinal(name)); }
         }
 
         object IDataRecord.this[int i] {

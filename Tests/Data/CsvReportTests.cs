@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using Xlnt.Data;
 
-namespace Xlnt.Tests.Data
+namespace Xlnt.Data
 {
     public class CsvReportTests
     {
