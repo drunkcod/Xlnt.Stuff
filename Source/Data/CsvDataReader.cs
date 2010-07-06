@@ -11,7 +11,7 @@ namespace Xlnt.Data
         static char DefaultSeparator = ',';
 
         readonly CsvRecordReader reader;
-        string[] values;
+        List<string> values = new List<string>();
         string[] fields;
 
         public CsvDataReader(TextReader reader) : this(reader, DefaultSeparator) { }
@@ -32,33 +32,34 @@ namespace Xlnt.Data
         
         public char Separator { get { return reader.Separator; } }
 
-        public void SetFieldCount(int count) 
-        {
+        public void SetFieldCount(int count) {
             fields = new string[count];
         }
         
-        public void ReadHeader(){
-            fields = ReadRecord();
+        public void ReadHeader() {
+            ReadRecord();
+            fields = values.ToArray();
         }
 
-        public override bool Read(){
-            values = ReadRecord();
-            return values.Length > 0;
+        public override bool Read() {
+            ReadRecord();
+            return values.Count > 0;
         }
 
-        public override string GetName(int i){
+        public override string GetName(int i) {
             return fields[i];
         }
 
-        public bool HasField(string name){
+        public bool HasField(string name) {
             return fields.Any(item => string.Compare(item, name, true) == 0);
         }
 
         public override object GetValue(int i){ return values[i]; }
         protected override void DisposeCore() { reader.Dispose(); }
 
-        string[] ReadRecord(){
-            return reader.Read();
+        void ReadRecord() {
+            values.Clear();
+            reader.ReadRecord(x => values.Add(x));
         }
     }
 }

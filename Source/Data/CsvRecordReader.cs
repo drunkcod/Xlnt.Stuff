@@ -26,17 +26,11 @@ namespace Xlnt.Data
 
         public char Separator { get { return separator; } }
 
-        public string[] Read() {
-            var items = new List<string>();
-            ReadRecord(() => items.Add(new string(buffer, start, FieldLength)));
-            return items.ToArray();
-        }
-
-        void ReadRecord(Action onField) {
+        public void ReadRecord(Action<string> fieldReady) {
             while (ReadNextChar()) {
                 if (curr == Separator) {
-                    onField();
-                    start = write;
+                    fieldReady(CurrentField);
+                    StartNext();
                 }
                 else if (curr == '\r')
                     continue;
@@ -48,29 +42,39 @@ namespace Xlnt.Data
                     Store(curr);
             }
             if (write != 0)
-                onField();
+                fieldReady(CurrentField);
         }
 
         int AvailableChunkSpace { get { return buffer.Length - write; } }
+        string CurrentField { get { return new string(buffer, start, FieldLength); } }
         int FieldLength { get { return write - start; } }
 
         bool ReadNextChar() {
-            if (read == lastChar) {
-                if (AvailableChunkSpace < MinChunkSize) {
-                    read = write = FieldLength;
-                    Array.Copy(buffer, start, buffer, 0, write);
-                    start = 0;
-                }
-                var count = reader.Read(buffer, write, AvailableChunkSpace);
-                if (count == 0)
-                    return false;
-                lastChar = write + count;
-            }
+            if (OutOfData())
+                return false;
             prev = curr;
             curr = buffer[read++];
             return true;
         }
 
+        bool OutOfData() {
+            if (read != lastChar)
+                return false;
+            if (AvailableChunkSpace < MinChunkSize) 
+                RealignBuffer();
+            var count = reader.Read(buffer, write, AvailableChunkSpace);
+            if (count == 0)
+                return true;
+            lastChar = write + count;
+            return false;
+        }
+
+        void RealignBuffer() {
+            read = write = FieldLength;
+            Array.Copy(buffer, start, buffer, 0, write);
+            start = 0;
+        }
+        
         void ReadEscaped() {
             while (ReadNextChar()) {
                 if (curr == '\\')
@@ -82,5 +86,7 @@ namespace Xlnt.Data
         }
 
         void Store(char ch) { buffer[write++] = ch; }
+
+        void StartNext() { start = write; }
     }
 }
