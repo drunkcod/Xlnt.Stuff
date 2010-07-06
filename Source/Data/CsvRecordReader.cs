@@ -34,15 +34,18 @@ namespace Xlnt.Data
                 }
                 else if (curr == '\r')
                     continue;
-                else if (curr == '\n')
+                else if (curr == '\n') {
                     break;
+                }
                 else if (curr == '"')
                     ReadEscaped();
                 else
                     Store(curr);
             }
-            if (FieldReady)
+            if (FieldReady) {
                 fieldReady(CurrentField);
+                StartNext();
+            }
         }
 
         int AvailableChunkSpace { get { return buffer.Length - write; } }

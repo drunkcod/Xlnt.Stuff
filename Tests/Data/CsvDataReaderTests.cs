@@ -5,6 +5,7 @@ using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Xlnt.Data;
 using Xlnt.IO;
+using System.Data;
 
 namespace Xlnt.Data
 {
@@ -91,6 +92,16 @@ namespace Xlnt.Data
             var csv = CsvDataReader.Parse("First");
             csv.ReadHeader();
             Assert.That(csv.HasField("fiRst"), Is.True);
+        }
+        [Test]
+        public void should_support_multiple_data_rows() {
+            var csv = CsvDataReader.Parse("First\r\n1\n2");
+            csv.ReadHeader();
+            IDataRecord record = csv;
+            csv.Read();
+            Assert.That(record["First"], Is.EqualTo("1"), "first line");
+            csv.Read();
+            Assert.That(record["First"], Is.EqualTo("2"), "second line");
         }
     }
 }
