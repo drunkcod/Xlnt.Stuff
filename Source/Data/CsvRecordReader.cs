@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Xlnt.Data
 {
-    public class CsvRecordReader : IDisposable
+    class CsvRecordReader : IDisposable
     {
         const int MaxFieldLength = 1024;
         const int MinChunkSize = 256;
@@ -12,8 +12,8 @@ namespace Xlnt.Data
         readonly TextReader reader;
         readonly char separator;
         readonly char[] buffer = new char[MaxFieldLength + MinChunkSize];
-        int first = 0, read = 0, write = 0, lastChar = 0;
-        char prev, curr = default(char);
+        int first, read, write, lastChar;
+        char prev, curr;
 
         public CsvRecordReader(TextReader reader, char separator) {
             this.reader = reader;
