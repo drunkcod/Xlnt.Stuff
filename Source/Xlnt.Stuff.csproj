@@ -59,6 +59,7 @@
     <Compile Include="CaseInsensitiveStringComparer.cs" />
     <Compile Include="Data\CollectionDataReader.cs" />
     <Compile Include="Data\CsvDataReader.cs" />
+    <Compile Include="Data\CsvRecordReader.cs" />
     <Compile Include="Data\CsvReport.cs" />
     <Compile Include="Data\DataReaderBase.cs" />
     <Compile Include="Data\FieldCollection.cs" />
@@ -72,7 +73,7 @@
     <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Threading\ReaderWriterLockExtensions.cs" />
     <Compile Include="TypeExtensions.cs" />
- </ItemGroup>
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
