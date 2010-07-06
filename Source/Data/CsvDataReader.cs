@@ -87,18 +87,21 @@ namespace Xlnt.Data
                 return items.ToArray();
             }
 
-            void ReadRecord(Action<ArraySegment<char>> onField)
-            {
+            void ReadRecord(Action<ArraySegment<char>> onField) {
                 char prev, curr = default(char);
-                var curb = new char[1];
                 bool inEscaped = false;
                 int start = 0;
+                int length = 0;
                 for (; ; )
                 {
                     prev = curr;
-                    if (reader.Read(curb, 0, 1) == 0)
-                        break;
-                    curr = curb[0];
+                    if(length == 0) {
+                        length = reader.Read(buffer, offset, buffer.Length - offset);
+                        if(length == 0)
+                            break;
+                    }
+                    --length;
+                    curr = buffer[offset];
                     if (inEscaped)
                     {
                         if (curr == '"')
@@ -118,8 +121,8 @@ namespace Xlnt.Data
                         else if (curr == Separator)
                         {
                             onField(new ArraySegment<char>(buffer, start, offset - start));
-                            offset = 0;
-                            start = 1;
+                            offset = start = offset + 1;
+                            continue;
                         }
                         else if (curr == '"')
                         {
