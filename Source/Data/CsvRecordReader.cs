@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Xlnt.Data
 {
-    class CsvRecordReader : IDisposable
+    public class CsvRecordReader : IDisposable
     {
         const int MaxFieldLength = 1024;
         const int MinChunkSize = 256;
@@ -12,8 +12,7 @@ namespace Xlnt.Data
         readonly TextReader reader;
         readonly char separator;
         readonly char[] buffer = new char[MaxFieldLength + MinChunkSize];
-        int first, read, write, lastChar;
-        char prev, curr;
+        int first, read , write, last;
 
         public CsvRecordReader(TextReader reader, char separator) {
             this.reader = reader;
@@ -28,49 +27,53 @@ namespace Xlnt.Data
 
         public void ReadRecord(Action<string> fieldReady) {
             if (fieldReady == null) throw new ArgumentNullException("fieldReady");
-            while (ReadNextChar()) {
-                if (curr == Separator) {
-                    fieldReady(CurrentField);
-                    StartNext();
+            for (; ; ) {
+                var c = ReadNextChar();
+                if (c == Separator)
+                    fieldReady(StartNext());
+                else switch (c) {
+                    default: Store(); break;
+                    case '"': ReadEscaped(); break;
+                    case '\r': continue;
+                    case '\n':
+                        fieldReady(StartNext()); 
+                        return;
+                    case -1:
+                        if (FieldReady)
+                            goto case '\n';
+                        return;
                 }
-                else if (curr == '\r')
-                    continue;
-                else if (curr == '\n') {
-                    break;
-                }
-                else if (curr == '"')
-                    ReadEscaped();
-                else
-                    Store(curr);
-            }
-            if (FieldReady) {
-                fieldReady(CurrentField);
-                StartNext();
             }
         }
 
         int AvailableChunkSpace { get { return buffer.Length - write; } }
-        string CurrentField { get { return new string(buffer, first, FieldLength); } }
         int FieldLength { get { return write - first; } }
         bool FieldReady { get { return write != first; } }
 
-        bool ReadNextChar() {
+        void ReadEscaped() {
+            for(int c; (c = ReadNextChar()) != -1; Store())
+                if (c == '\\') {
+                    if (ReadNextChar() == -1)
+                        return;
+                } else if (c == '"')
+                    return;
+        }
+
+        int ReadNextChar() {
             if (OutOfData())
-                return false;
-            prev = curr;
-            curr = buffer[read++];
-            return true;
+                return -1;
+            return buffer[write] = buffer[read++];
         }
 
         bool OutOfData() {
-            if (read != lastChar)
+            if (read != last)
                 return false;
             if (AvailableChunkSpace < MinChunkSize) 
                 RealignBuffer();
             var count = reader.Read(buffer, write, AvailableChunkSpace);
             if (count == 0)
                 return true;
-            lastChar = write + count;
+            last = write + count;
             return false;
         }
 
@@ -80,18 +83,12 @@ namespace Xlnt.Data
             first = 0;
         }
         
-        void ReadEscaped() {
-            while (ReadNextChar()) {
-                if (curr == '\\')
-                    continue;
-                if (curr == '"' && prev != '\\')
-                    return;
-                Store(curr);
-            }
+        void Store() { ++write; }
+
+        string StartNext() {
+            var field = new string(buffer, first, FieldLength);
+            first = write;
+            return field;
         }
-
-        void Store(char ch) { buffer[write++] = ch; }
-
-        void StartNext() { first = write; }
     }
 }
