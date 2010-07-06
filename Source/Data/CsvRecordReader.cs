@@ -51,7 +51,7 @@ namespace Xlnt.Data
         int AvailableChunkSpace { get { return buffer.Length - write; } }
         string CurrentField { get { return new string(buffer, first, FieldLength); } }
         int FieldLength { get { return write - first; } }
-        bool FieldReady { get { return write != 0; } }
+        bool FieldReady { get { return write != first; } }
 
         bool ReadNextChar() {
             if (OutOfData())

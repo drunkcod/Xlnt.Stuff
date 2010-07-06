@@ -103,5 +103,14 @@ namespace Xlnt.Data
             csv.Read();
             Assert.That(record["First"], Is.EqualTo("2"), "second line");
         }
+        [Test]
+        public void should_stop_when_out_of_data() {
+            var csv = CsvDataReader.Parse("First\r\n1\n2");
+            csv.ReadHeader();
+            Assert.That(new[] {
+                csv.Read(), csv.Read(), csv.Read()
+            }, Is.EqualTo(new []{ true, true, false}));
+        }
+
     }
 }
