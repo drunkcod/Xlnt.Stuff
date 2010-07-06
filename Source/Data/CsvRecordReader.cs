@@ -12,7 +12,7 @@ namespace Xlnt.Data
         readonly TextReader reader;
         readonly char separator;
         readonly char[] buffer = new char[MaxFieldLength + MinChunkSize];
-        int start = 0, read = 0, write = 0, lastChar = 0;
+        int first = 0, read = 0, write = 0, lastChar = 0;
         char prev, curr = default(char);
 
         public CsvRecordReader(TextReader reader, char separator) {
@@ -41,13 +41,14 @@ namespace Xlnt.Data
                 else
                     Store(curr);
             }
-            if (write != 0)
+            if (FieldReady)
                 fieldReady(CurrentField);
         }
 
         int AvailableChunkSpace { get { return buffer.Length - write; } }
-        string CurrentField { get { return new string(buffer, start, FieldLength); } }
-        int FieldLength { get { return write - start; } }
+        string CurrentField { get { return new string(buffer, first, FieldLength); } }
+        int FieldLength { get { return write - first; } }
+        bool FieldReady { get { return write != 0; } }
 
         bool ReadNextChar() {
             if (OutOfData())
@@ -71,8 +72,8 @@ namespace Xlnt.Data
 
         void RealignBuffer() {
             read = write = FieldLength;
-            Array.Copy(buffer, start, buffer, 0, write);
-            start = 0;
+            Array.Copy(buffer, first, buffer, 0, write);
+            first = 0;
         }
         
         void ReadEscaped() {
@@ -87,6 +88,6 @@ namespace Xlnt.Data
 
         void Store(char ch) { buffer[write++] = ch; }
 
-        void StartNext() { start = write; }
+        void StartNext() { first = write; }
     }
 }
