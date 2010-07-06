@@ -117,10 +117,9 @@ namespace Xlnt.Data
             int FieldLength { get { return write - start; } }
 
             bool ReadNextChar() {
-                prev = curr;
                 if (itemsAvailable == 0) {
                     if (AvailableChunkSpace < MinChunkSize) {
-                        write = write - start;
+                        write = FieldLength;
                         Array.Copy(buffer, start, buffer, 0, write);
                         start = 0;
                     }
@@ -129,6 +128,7 @@ namespace Xlnt.Data
                         return false;
                 }
                 --itemsAvailable;
+                prev = curr;
                 curr = buffer[read++];
                 return true;
             }
@@ -136,11 +136,10 @@ namespace Xlnt.Data
             void ReadEscaped() {
                 while (ReadNextChar())
                 {
-                    if (curr == '"')
-                        if (prev != '\\')
-                            return;
-                        else
-                            --write;
+                    if (curr == '\\')
+                        continue;
+                    if (curr == '"' && prev != '\\')
+                        return;
                     Store(curr);
                 }
             }
