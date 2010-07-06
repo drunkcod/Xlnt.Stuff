@@ -82,11 +82,17 @@ namespace Xlnt.Data
             public char Separator { get { return separator; } }
 
             public string[] Read() {
-                var start = 0;
                 var items = new List<string>();
+                ReadRecord(x => items.Add(new string(x.Array, x.Offset, x.Count)));
+                return items.ToArray();
+            }
+
+            void ReadRecord(Action<ArraySegment<char>> onField)
+            {
                 char prev, curr = default(char);
                 var curb = new char[1];
                 bool inEscaped = false;
+                int start = 0;
                 for (; ; )
                 {
                     prev = curr;
@@ -111,7 +117,7 @@ namespace Xlnt.Data
                             break;
                         else if (curr == Separator)
                         {
-                            items.Add(new String(buffer, start, offset - start));
+                            onField(new ArraySegment<char>(buffer, start, offset - start));
                             offset = 0;
                             start = 1;
                         }
@@ -123,10 +129,8 @@ namespace Xlnt.Data
                     }
                     Store(curr);
                 }
-                if (items.Count == 0 && offset == 0)
-                    return new string[0];
-                items.Add(new String(buffer, start, offset - start));
-                return items.ToArray();
+                if (offset != 0)
+                    onField(new ArraySegment<char>(buffer, start, offset - start));
             }
 
             void Store(char ch) { buffer[offset++] = ch; }
