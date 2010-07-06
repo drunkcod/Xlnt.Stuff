@@ -76,8 +76,7 @@ namespace Xlnt.Data
         }
         [Test]
         public void should_support_different_separators(){
-            var csv = CsvDataReader.Parse("1;2");
-            csv.Separator = ';';
+            var csv = CsvDataReader.Parse("1;2", ';');
             csv.Read();
             Assert.That(new[] {csv.GetValue(0), csv.GetValue(1)}, Is.EqualTo(new[] {"1", "2"}));
         }
