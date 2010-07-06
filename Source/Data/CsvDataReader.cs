@@ -63,12 +63,13 @@ namespace Xlnt.Data
 
         class RecordReader : IDisposable
         {
-            const int MaxFieldLength = 4096;
+            const int MaxFieldLength = 1024;
+            const int MinChunkSize = 256;
 
             readonly TextReader reader;
             readonly char separator;
-            readonly char[] buffer = new char[MaxFieldLength];
-            int offset = 0;
+            readonly char[] buffer = new char[MaxFieldLength + MinChunkSize];
+            int start = 0, offset = 0, itemsAvailable = 0;
 
             public RecordReader(TextReader reader, char separator) {
                 this.reader = reader;
@@ -90,18 +91,13 @@ namespace Xlnt.Data
             void ReadRecord(Action<ArraySegment<char>> onField) {
                 char prev, curr = default(char);
                 bool inEscaped = false;
-                int start = 0;
-                int length = 0;
                 for (; ; )
                 {
                     prev = curr;
-                    if(length == 0) {
-                        length = reader.Read(buffer, offset, buffer.Length - offset);
-                        if(length == 0)
-                            break;
-                    }
-                    --length;
-                    curr = buffer[offset];
+                    var next = NextChar();
+                    if (next == -1)
+                        break;
+                    curr = (char)next;
                     if (inEscaped)
                     {
                         if (curr == '"')
@@ -136,6 +132,22 @@ namespace Xlnt.Data
                     onField(new ArraySegment<char>(buffer, start, offset - start));
             }
 
+            int NextChar() {
+                if (itemsAvailable == 0) {
+                    var chunkSize = buffer.Length - offset;
+                    if (chunkSize < MinChunkSize) {
+                        offset = offset - start;
+                        Array.Copy(buffer, start, buffer, 0, offset);
+                        start = 0;
+                        chunkSize = buffer.Length - offset;
+                    }
+                    itemsAvailable = reader.Read(buffer, offset, chunkSize);
+                    if (itemsAvailable == 0)
+                        return -1;
+                }
+                --itemsAvailable;
+                return buffer[offset];
+            }
             void Store(char ch) { buffer[offset++] = ch; }
         }
     }
