@@ -15,32 +15,26 @@ namespace Xlnt.Data
         int start = 0, read = 0, write = 0, lastChar = 0;
         char prev, curr = default(char);
 
-        public CsvRecordReader(TextReader reader, char separator)
-        {
+        public CsvRecordReader(TextReader reader, char separator) {
             this.reader = reader;
             this.separator = separator;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             reader.Dispose();
         }
 
         public char Separator { get { return separator; } }
 
-        public string[] Read()
-        {
+        public string[] Read() {
             var items = new List<string>();
             ReadRecord(() => items.Add(new string(buffer, start, FieldLength)));
             return items.ToArray();
         }
 
-        void ReadRecord(Action onField)
-        {
-            while (ReadNextChar())
-            {
-                if (curr == Separator)
-                {
+        void ReadRecord(Action onField) {
+            while (ReadNextChar()) {
+                if (curr == Separator) {
                     onField();
                     start = write;
                 }
@@ -60,12 +54,9 @@ namespace Xlnt.Data
         int AvailableChunkSpace { get { return buffer.Length - write; } }
         int FieldLength { get { return write - start; } }
 
-        bool ReadNextChar()
-        {
-            if (read == lastChar)
-            {
-                if (AvailableChunkSpace < MinChunkSize)
-                {
+        bool ReadNextChar() {
+            if (read == lastChar) {
+                if (AvailableChunkSpace < MinChunkSize) {
                     read = write = FieldLength;
                     Array.Copy(buffer, start, buffer, 0, write);
                     start = 0;
@@ -80,10 +71,8 @@ namespace Xlnt.Data
             return true;
         }
 
-        void ReadEscaped()
-        {
-            while (ReadNextChar())
-            {
+        void ReadEscaped() {
+            while (ReadNextChar()) {
                 if (curr == '\\')
                     continue;
                 if (curr == '"' && prev != '\\')
