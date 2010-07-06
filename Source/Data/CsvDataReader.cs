@@ -69,7 +69,8 @@ namespace Xlnt.Data
             readonly TextReader reader;
             readonly char separator;
             readonly char[] buffer = new char[MaxFieldLength + MinChunkSize];
-            int start = 0, offset = 0, itemsAvailable = 0;
+            int start = 0, read = 0, write = 0, itemsAvailable = 0;
+            char prev, curr = default(char);
 
             public RecordReader(TextReader reader, char separator) {
                 this.reader = reader;
@@ -89,66 +90,62 @@ namespace Xlnt.Data
             }
 
             void ReadRecord(Action<ArraySegment<char>> onField) {
-                char prev, curr = default(char);
-                bool inEscaped = false;
                 for (; ; )
                 {
-                    prev = curr;
-                    var next = NextChar();
-                    if (next == -1)
+                    if (!ReadNextChar())
                         break;
-                    curr = (char)next;
-                    if (inEscaped)
-                    {
-                        if (curr == '"')
-                            if (prev != '\\')
-                                inEscaped = false;
-                            else
-                            {
-                                offset -= 1;
-                            }
+                    if (curr == '\r')
+                        continue;
+                    if (curr == '\n')
+                        break;
+                    if (curr == Separator) {
+                        onField(new ArraySegment<char>(buffer, start, FieldLength));
+                        read = write = start = write + 1;
+                        continue;
                     }
-                    else
-                    {
-                        if (curr == '\r')
-                            continue;
-                        if (curr == '\n')
-                            break;
-                        else if (curr == Separator)
-                        {
-                            onField(new ArraySegment<char>(buffer, start, offset - start));
-                            offset = start = offset + 1;
-                            continue;
-                        }
-                        else if (curr == '"')
-                        {
-                            inEscaped = true;
-                            start += 1;
-                        }
+                    if (curr == '"') {
+                        ReadEscaped();
+                        continue;
                     }
                     Store(curr);
                 }
-                if (offset != 0)
-                    onField(new ArraySegment<char>(buffer, start, offset - start));
+                if (write != 0)
+                    onField(new ArraySegment<char>(buffer, start, FieldLength));
             }
 
-            int NextChar() {
+            int AvailableChunkSpace { get { return buffer.Length - write; } }
+            int FieldLength { get { return write - start; } }
+
+            bool ReadNextChar() {
+                prev = curr;
                 if (itemsAvailable == 0) {
-                    var chunkSize = buffer.Length - offset;
-                    if (chunkSize < MinChunkSize) {
-                        offset = offset - start;
-                        Array.Copy(buffer, start, buffer, 0, offset);
+                    if (AvailableChunkSpace < MinChunkSize) {
+                        write = write - start;
+                        Array.Copy(buffer, start, buffer, 0, write);
                         start = 0;
-                        chunkSize = buffer.Length - offset;
                     }
-                    itemsAvailable = reader.Read(buffer, offset, chunkSize);
+                    itemsAvailable = reader.Read(buffer, write, AvailableChunkSpace);
                     if (itemsAvailable == 0)
-                        return -1;
+                        return false;
                 }
                 --itemsAvailable;
-                return buffer[offset];
+                curr = buffer[read++];
+                return true;
             }
-            void Store(char ch) { buffer[offset++] = ch; }
+
+            void ReadEscaped() {
+                while (ReadNextChar())
+                {
+                    if (curr == '"')
+                        if (prev != '\\')
+                            return;
+                        else
+                            --write;
+                    Store(curr);
+                }
+            }
+
+            void Store(char ch) { buffer[write++] = ch; }
         }
     }
 }
