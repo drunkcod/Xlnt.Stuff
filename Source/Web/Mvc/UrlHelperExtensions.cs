@@ -14,14 +14,15 @@ namespace Xlnt.Web.Mvc
         }
 
         public static string Action(this UrlHelper self, Expression<Action> expr) {
-            var method = (MethodCallExpression)expr.Body;
+            var body = (MethodCallExpression)expr.Body;
+            var method = body.Method;
             var routeValues = new RouteValueDictionary();
-            var parameters = method.Method.GetParameters();
+            var parameters = method.GetParameters();
             for(int i = 0; i != parameters.Length; ++i) {
-                var arg = method.Arguments[i];
+                var arg = body.Arguments[i];
                 routeValues.Add(parameters[i].Name, Value(arg));
             }
-            return self.Action(method.Method.Name, routeValues);
+            return self.Action(method.Name, routeValues);
         }
 
         static object Value(Expression expr) {
