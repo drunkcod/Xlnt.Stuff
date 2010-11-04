@@ -10,7 +10,7 @@ namespace Xlnt.Web.Mvc
 {
     public class BasicControllerFactory : IControllerFactory
     {
-        readonly Dictionary<string, Func<IController>> controllers = new Dictionary<string, Func<IController>>();
+        readonly Dictionary<string, Func<IController>> controllers = new Dictionary<string, Func<IController>>(StringComparer.InvariantCultureIgnoreCase);
 
         public IController CreateController(RequestContext requestContext, string controllerName) {
             Func<IController> controller;
@@ -35,6 +35,10 @@ namespace Xlnt.Web.Mvc
                 RegisterController(item.Name.Replace("Controller", string.Empty), item);
         }
 
-        public void ReleaseController(IController controller) {}
+        public void ReleaseController(IController controller) {
+            var disposable = controller as IDisposable;
+            if(disposable != null)
+                disposable.Dispose();
+        }
     }
 }

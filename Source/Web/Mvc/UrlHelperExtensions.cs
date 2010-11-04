@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Routing;
+using System.Collections.ObjectModel;
 
 namespace Xlnt.Web.Mvc
 {
@@ -16,13 +17,16 @@ namespace Xlnt.Web.Mvc
         public static string Action(this UrlHelper self, Expression<Action> expr) {
             var body = (MethodCallExpression)expr.Body;
             var method = body.Method;
+            return self.Action(method.Name, GetRouteValues(method.GetParameters(), body.Arguments));
+        }
+
+        static RouteValueDictionary GetRouteValues(ParameterInfo[] parameters, ReadOnlyCollection<Expression> arguments) {
             var routeValues = new RouteValueDictionary();
-            var parameters = method.GetParameters();
             for(int i = 0; i != parameters.Length; ++i) {
-                var arg = body.Arguments[i];
+                var arg = arguments[i];
                 routeValues.Add(parameters[i].Name, Value(arg));
             }
-            return self.Action(method.Name, routeValues);
+            return routeValues;
         }
 
         static object Value(Expression expr) {

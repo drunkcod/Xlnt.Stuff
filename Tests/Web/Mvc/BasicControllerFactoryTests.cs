@@ -1,19 +1,49 @@
 ﻿using System.Web;
+using System.Web.Mvc;
 using System.Web.Routing;
-using Moq;
-using NUnit.Framework;
 using Cone;
+using Moq;
+using System;
 
 namespace Xlnt.Web.Mvc
 {
+    namespace Dummies 
+    {
+        class DummyController : Controller { }
+    }
+    
+    public interface IDisposableController : IDisposable, IController { }
+    
     [Describe(typeof(BasicControllerFactory))]
     public class BasicControllerFactoryTests
     {
         static RequestContext EmptyContext() { return new RequestContext(new Mock<HttpContextBase>().Object, new RouteData()); }
-        
+        BasicControllerFactory Factory;
+
+        [BeforeEach]
+        public void EstablishContext() {
+            Factory = new BasicControllerFactory();
+        }
+
+
         public void returns_MissingController_if_no_matching_controller_available() {
-            var factory = new BasicControllerFactory();
-            Assert.That(factory.CreateController(EmptyContext(), "MissingController"), Is.TypeOf(typeof(MissingController)));
+            Verify.That(() => Factory.CreateController(EmptyContext(), "MissingController") is MissingController);
+        }
+
+
+        public void dispose_Disposable_controllers() {
+            var controller = new Mock<IDisposableController>(MockBehavior.Strict);
+            controller.Setup(x => x.Dispose());
+
+            Factory.ReleaseController(controller.Object);
+
+            controller.VerifyAll();
+        }
+
+        public void controller_names_are_case_insensitive() {
+            Factory.Register(new[]{ typeof(Dummies.DummyController) });
+
+            Verify.That(() => Factory.CreateController(EmptyContext(), "dummy") is Dummies.DummyController);
         }
 
         [Context("controller registration")]
@@ -24,7 +54,7 @@ namespace Xlnt.Web.Mvc
                 var controller = new MissingController();
                 factory.RegisterController("Foo", () => controller);
             
-                Assert.That(factory.CreateController(EmptyContext(), "Foo"), Is.SameAs(controller));
+                Verify.That(() => object.ReferenceEquals(factory.CreateController(EmptyContext(), "Foo"), controller));
             }
         }
     }

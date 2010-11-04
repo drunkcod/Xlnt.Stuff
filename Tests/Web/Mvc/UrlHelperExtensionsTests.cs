@@ -23,29 +23,29 @@ namespace Xlnt.Web.Mvc
 
         public void niladic_lambda_action() {
             var url = UrlHelperFor("Foo");            
-            Assert.That(url.Action(() => Index(42)), Is.EqualTo("/Foo/42/Index"));
+            Verify.That(() => url.Action(() => Index(42)) == "/Foo/42/Index");
         }
 
         public void niladic_indirect_lambda_action() {
             var url = UrlHelperFor("Foo");
-            Assert.That(Indirect(42, x => url.Action(() => Index(x))), Is.EqualTo("/Foo/42/Index"));
+            Verify.That(() => Indirect(42, x => url.Action(() => Index(x))) == "/Foo/42/Index");
         }
 
         public void multi_argument_action() {
             var url = UrlHelperFor("Multiple");
-            Assert.That(url.Action(() => Foo(7, "Moar")), Is.EqualTo("/Multiple/7/Foo/Moar"));
+            Verify.That(() => url.Action(() => Foo(7, "Moar")) == "/Multiple/7/Foo/Moar");
         }
 
         public void AbsoluteUrl_included_scheme_and_authority() {
             var url = UrlHelperFor("Foo");
-            Assert.That(url.Absolute("/"), Is.EqualTo("http://localhost/"));
+            Verify.That(() => url.Absolute("/") == "http://localhost/");
         }
 
         public static int DefaultId = 3;
 
-        public void Should_handle_static_fields() {
+        public void supports_reading_static_fields() {
             var url = UrlHelperFor("Foo");
-            Assert.That(url.Action(() => Index(DefaultId)), Is.EqualTo("/Foo/" + DefaultId + "/Index"));
+            Verify.That(() => url.Action(() => Index(DefaultId)) == "/Foo/" + DefaultId + "/Index");
         }
 
         string Indirect<T>(T value, Func<T, string> block) { return block(value); }
