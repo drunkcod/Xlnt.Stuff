@@ -1,7 +1,8 @@
-﻿using NUnit.Framework;
+﻿using Cone;
 
 namespace Xlnt.Stuff
 {
+    [Describe(typeof(TypeExtensions))]
     public class TypeExtensionsTests
     {
         class MyClass
@@ -16,18 +17,15 @@ namespace Xlnt.Stuff
             public int Value { get { return value; } }
         }
 
-        [Test]
-        public void ConstructAs_should_use_default_ctor_when_no_parameters_given() {
+        public void ConstructAs_uses_default_ctor_when_no_parameters_given() {
             var obj = typeof(MyClass).ConstructAs<MyClass>();
-            Assert.That(obj.Value, Is.EqualTo(MyClass.DefaultValue));
-        }
-        [Test]
-        public void ConstructAs_should_find_parameterized_ctor() {
-            var value = MyClass.DefaultValue + 1;
-            var obj = typeof(MyClass).ConstructAs<MyClass>(value);
-            Assert.That(obj.Value, Is.EqualTo(value));
-        
+            Verify.That(() => obj.Value == MyClass.DefaultValue);
         }
 
+        public void ConstructAs_finds_parameterized_ctor() {
+            var value = MyClass.DefaultValue + 1;
+            var obj = typeof(MyClass).ConstructAs<MyClass>(value);
+            Verify.That(() => obj.Value == value);
+        }
     }
 }

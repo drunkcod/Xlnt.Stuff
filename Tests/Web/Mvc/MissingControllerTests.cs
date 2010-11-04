@@ -1,16 +1,14 @@
-﻿using System;
-using System.Web;
+﻿using System.Web;
 using System.Web.Routing;
+using Cone;
 using Moq;
-using NUnit.Framework;
 
 namespace Xlnt.Web.Mvc
 {
-    [TestFixture]
+    [Describe(typeof(MissingController))]
     public class MissingControllerTests
     {
-        [Test]
-        public void Should_response_StatusCode_to_404() {
+        public void sets_response_StatusCode_to_404() {
             var controller = new MissingController();
             var response = new Mock<HttpResponseBase>();
             var httpContext = new Mock<HttpContextBase>();

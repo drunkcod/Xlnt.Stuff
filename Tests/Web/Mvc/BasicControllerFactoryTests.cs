@@ -25,11 +25,9 @@ namespace Xlnt.Web.Mvc
             Factory = new BasicControllerFactory();
         }
 
-
         public void returns_MissingController_if_no_matching_controller_available() {
             Verify.That(() => Factory.CreateController(EmptyContext(), "MissingController") is MissingController);
         }
-
 
         public void dispose_Disposable_controllers() {
             var controller = new Mock<IDisposableController>(MockBehavior.Strict);
