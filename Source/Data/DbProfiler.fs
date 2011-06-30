@@ -208,10 +208,10 @@ type ProfiledConnection(inner:DbConnection) =
             opening.Trigger()
             inner.Open()
 
-        interface IDisposable with
-            member this.Dispose() = 
+        override this.Dispose disposing =
+            if disposing then
                 inner.Dispose()
-                base.Dispose()
+            base.Dispose disposing
 
         member this.Opening = opening.Publish
 
@@ -274,7 +274,6 @@ type DbProfilingSession() =
             this.EndRow(reader, elapsed)
 
 type DbProfiler() =
-
     member this.Connect(listener:IDbProfilingSession, db) = 
         let db' = new ProfiledConnection(db)
         db'.CommandCreated.Add(fun e -> 
