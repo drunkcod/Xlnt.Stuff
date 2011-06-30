@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Xlnt</RootNamespace>
-    <AssemblyName>Xlnt.Stuff.Tests</AssemblyName>
+    <AssemblyName>Xlnt.Stuff.Specs</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IntermediateOutputPath>..\Build\$(MSBuildProjectName)</IntermediateOutputPath>
@@ -51,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
     <Reference Include="Cone, Version=0.0.2.23, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\Cone.dll</HintPath>
@@ -68,6 +69,8 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Data.SqlServerCe, Version=3.5.1.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Mvc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
@@ -82,6 +85,7 @@
     <Compile Include="Data\CsvReportTests.cs" />
     <Compile Include="Data\DataReaderBaseTests.cs" />
     <Compile Include="Data\DataReaderExtensionsTests.cs" />
+    <Compile Include="Data\DbProfilerSpec.cs" />
     <Compile Include="Data\SqlBulkCopyFixture.cs" />
     <Compile Include="Data\SqlDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
@@ -90,15 +94,23 @@
     <Compile Include="TypeExtensionsTests.cs" />
     <Compile Include="Web\Mvc\BasicControllerFactoryTests.cs" />
     <Compile Include="Web\Mvc\MissingControllerTests.cs" />
-    <Compile Include="Web\Mvc\UrlHelperExtensionsTests.cs" />
     <ProjectReference Include="..\Source\Web\Xlnt.Web.csproj">
       <Project>{F8901B87-E944-4901-B8F7-44EE26F3D7D2}</Project>
       <Name>Xlnt.Web</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\Xlnt.Data.fsproj">
+      <Project>{FD54C5FB-0704-4474-A94A-1AF1A5A6C3D5}</Project>
+      <Name>Xlnt.Data</Name>
     </ProjectReference>
     <ProjectReference Include="..\Source\Xlnt.Stuff.csproj">
       <Project>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</Project>
       <Name>Xlnt.Stuff</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Sample.sdf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -11,7 +11,7 @@ module Timed =
         let stopwatch = Stopwatch.StartNew()
         let r = f()
         stopwatch.Stop()
-        report(stopwatch.Elapsed)
+        report(r, stopwatch.Elapsed)
         r
 
 type ProfiledDataReader(inner:DbDataReader) = 
@@ -92,7 +92,7 @@ type ProfiledDataReader(inner:DbDataReader) =
 
         override this.Read() =
             beginRow.Trigger(this)            
-            Timed.action inner.Read (fun elapsed -> endRow.Trigger((this, elapsed)))
+            Timed.action inner.Read (fun (success, elapsed) -> if success then endRow.Trigger((this, elapsed)))
 
         interface IDisposable with
             member this.Dispose() = 
@@ -110,7 +110,7 @@ type ProfiledCommand(inner:DbCommand) =
 
         member this.Query f = 
             beginQuery.Trigger(this)
-            Timed.action f (fun elapsed -> endQuery.Trigger(this, elapsed))
+            Timed.action f (fun (_, elapsed) -> endQuery.Trigger(this, elapsed))
 
         override this.CommandText
             with get() = inner.CommandText
@@ -267,17 +267,19 @@ type DbProfilingSession() =
             this.EndQuery(command, elapsed)
 
         member this.BeginRow reader = 
-            rowCount <- rowCount + 1
             this.BeginRow(reader)
 
         member this.EndRow(reader, elapsed) =
+            rowCount <- rowCount + 1
             this.EndRow(reader, elapsed)
 
 type DbProfiler() =
     member this.Connect(listener:IDbProfilingSession, db) = 
         let db' = new ProfiledConnection(db)
-        db'.CommandCreated.Add(fun e -> 
+        db'.CommandCreated.Add(fun e ->
             e.BeginQuery.Add(fun e -> listener.BeginQuery(e))
-            e.EndQuery.Add(fun (e,elapsed) -> listener.EndQuery(e, elapsed))
-            e.ReaderCreated.Add(fun e -> e.BeginRow.Add(fun e -> listener.BeginRow(e))))
+            e.EndQuery.Add(fun (e, elapsed) -> listener.EndQuery(e, elapsed))
+            e.ReaderCreated.Add(fun e -> 
+                e.BeginRow.Add(listener.BeginRow)
+                e.EndRow.Add(listener.EndRow)))
         db'

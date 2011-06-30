@@ -3,14 +3,13 @@ using System.Collections.Specialized;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
-using Moq;
-using NUnit.Framework;
 using Cone;
+using Moq;
 
 namespace Xlnt.Web.Mvc
 {
     [Describe(typeof(UrlHelperExtensions))]
-    public class UrlHelperExtensionsTests
+    public class UrlHelperExtensionsSpec
     {
         RouteCollection RouteTable;
 
