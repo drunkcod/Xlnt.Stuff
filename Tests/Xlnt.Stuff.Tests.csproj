@@ -52,15 +52,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Cone">
-      <HintPath>..\..\Tools\NUnit-2.5.7.10213\bin\net-2.0\addins\Cone.dll</HintPath>
+      <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\Cone.dll</HintPath>
     </Reference>
-    <Reference Include="Moq, Version=3.1.416.3, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Lib\Moq\Moq.dll</HintPath>
+    <Reference Include="Moq">
+      <HintPath>..\Tools\Moq.4.0.10827\NET35\Moq.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.5.5.10112, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Tools\NUnit-2.5.7.10213\bin\net-2.0\framework\nunit.framework.dll</HintPath>
+    <Reference Include="nunit.framework">
+      <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
