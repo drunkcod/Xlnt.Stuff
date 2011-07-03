@@ -14,20 +14,20 @@ namespace Xlnt.Data
     {
         static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilerSpec).Assembly.CodeBase).LocalPath); } }
 
-        static DbConnection NewSampleConnection() {
-            return new SqlCeConnection(string.Format("DataSource={0}", Path.Combine(DataPath, "Sample.sdf")));
+        static DbConnection OpenSampleConnection() {
+            var connection = new SqlCeConnection(string.Format("DataSource={0}", Path.Combine(DataPath, "Sample.sdf")));
+            connection.Open();
+            return connection;
         }
 
         [DisplayAs("Ado.Net usage")]
         public void basic_usage() {
             var session = new DbProfilingSession();
             var profiler = new DbProfiler();
-            var db = profiler.Connect(session, NewSampleConnection());
+            var db = profiler.Connect(session, OpenSampleConnection());
 
             var query = db.CreateCommand();
             query.CommandText = "select sum(value) from Numbers";
-
-            db.Open();
             query.ExecuteScalar();
 
             Verify.That(() => session.QueryCount == 1);
@@ -47,40 +47,33 @@ namespace Xlnt.Data
 
             int NumbersRowCount { 
                 get { 
-                    using(var db = NewSampleConnection()) 
-                    using(var q = db.CreateCommand()) {
-                        q.CommandText = "select count(*) from Numbers";
-                        db.Open();
-                        return (int)q.ExecuteScalar();
-                    }
+                    using(var db = OpenSampleConnection())
+                        return (int)db.ExecuteScalar("select count(*) from Numbers");
                 }
             }
 
-            public void ensure_deferred_execution() {
-                var session = new VerboseSession();
+            public void compare_deferred_and_local_execution() {
+                var session = new DbProfilingSession();
                 var profiler = new DbProfiler();
-                var db = profiler.Connect(session, NewSampleConnection());
-
-                var context = new DataContext(db);
+                var context = new DataContext(profiler.Connect(session, OpenSampleConnection()));
                 var numbers = context.GetTable<Number>(); 
-                using(var asQuery = session.EnterScope("Sent to database for execution")) {
+
+                var deffered = session.Scoped("Sent to database for execution", _ => {
                     numbers.Sum(x => x.Value);
+                });                    
 
-                    using(var dummy = asQuery.Enter("subscope")) { }
-                    
-                    Verify.That(() => asQuery.QueryCount == 1);
-                    Verify.That(() => asQuery.RowCount == 1);
-                }
+                var inMemory = session.Scoped("Pull all rows to memory", _ => {
+                    numbers.AsEnumerable().Sum(x => x.Value);                   
+                });
 
-                using(var inMemory = session.EnterScope("Pull all rows to memory")) {
-                    numbers.AsEnumerable().Sum(x => x.Value);
-                    
-                    Verify.That(() => inMemory.QueryCount == 1);
-                    Verify.That(() => inMemory.RowCount == NumbersRowCount);
-                }       
+                Verify.That(() => deffered.QueryCount == 1);
+                Verify.That(() => deffered.RowCount == 1);
 
-                Verify.That(() => session.QueryCount == 2);
-                Verify.That(() => session.RowCount == 1 + NumbersRowCount);
+                Verify.That(() => inMemory.QueryCount == 1);
+                Verify.That(() => inMemory.RowCount == NumbersRowCount);
+
+                Verify.That(() => session.QueryCount == deffered.QueryCount + inMemory.QueryCount);
+                Verify.That(() => session.RowCount == deffered.RowCount + inMemory.RowCount);
 
             }
         }

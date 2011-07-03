@@ -4,15 +4,14 @@ open System
 open System.Collections.Generic
 
 type IProfilingSessionScopeListener = 
-    abstract EnterScope : scope:DbProfilingSessionScope -> unit
-    abstract ExitScope : scope:DbProfilingSessionScope -> unit
+    abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
+    abstract LeaveScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
 
-and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener) =
+and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outerScope) =
     let mutable queryCount = 0
     let mutable queryTime = TimeSpan.Zero
     let mutable rowCount = 0
-    let children = List()
-    
+
     member this.ScopeName = name
 
     member this.QueryCount = queryCount
@@ -21,35 +20,33 @@ and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener) =
 
     member this.RowCount = rowCount
 
-    member this.Reset() =
-        queryCount <- 0
-        rowCount <- 0
-        queryTime <- TimeSpan.Zero
-
-    member internal this.Detach child = 
-        children.Remove child |> ignore
-        listener.ExitScope child
-
-    member this.Enter name = 
-        let child = new DbProfilingSessionScope(name, listener)
-        children.Add(child)
-        listener.EnterScope child
+    member this.Scoped name (action:Action<_>) =
+        use child = this.Enter name
+        action.Invoke(child)
         child
 
-    member internal this.Query() = 
+    member this.Enter name = 
+        let child = new DbProfilingSessionScope(name, listener, Some(this))
+        listener.EnterScope(this, child)
+        child
+
+    member this.Leave() = 
+        listener.LeaveScope(this, Option.get outerScope)
+
+    member internal this.Query() =        
         queryCount <- queryCount + 1
-        children.ForEach(fun x -> x.Query())
+        outerScope |> Option.iter (fun x -> x.Query())
 
     member internal this.QueryElapsed elapsed = 
         queryTime <- queryTime + elapsed
-        children.ForEach(fun x -> x.QueryElapsed elapsed)
+        outerScope |> Option.iter (fun x -> x.QueryElapsed elapsed)
 
     member internal this.Row() = 
         rowCount <- rowCount + 1
-        children.ForEach(fun x -> x.Row())
+        outerScope |> Option.iter (fun x -> x.Row())
 
     interface IDisposable with
-        member this.Dispose() = this.Detach this     
+        member this.Dispose() = this.Leave()
 
 type IDbProfilingSession =   
     abstract BeginQuery : query:ProfiledCommand -> unit
@@ -58,13 +55,14 @@ type IDbProfilingSession =
     abstract EndRow : reader:ProfiledDataReader * elapsed:TimeSpan -> unit
 
 type DbProfilingSession() as this =
-    let scope = new DbProfilingSessionScope("<global>", this)
+    let globalScope = new DbProfilingSessionScope("<global>", this, None)
+    let mutable currentScope = globalScope
 
-    member this.QueryCount = scope.QueryCount
+    member this.QueryCount = globalScope.QueryCount
 
-    member this.RowCount = scope.RowCount
+    member this.RowCount = globalScope.RowCount
 
-    member this.QueryTime = scope.QueryTime
+    member this.QueryTime = globalScope.QueryTime
 
     abstract BeginQuery : query:ProfiledCommand -> unit
     
@@ -82,33 +80,37 @@ type DbProfilingSession() as this =
 
     default this.EndRow(reader, elapsed) = ()
 
-    member this.EnterScope name = scope.Enter(name)
+    member this.Scoped name action = currentScope.Scoped name action
 
     abstract EnterScope : scope:DbProfilingSessionScope -> unit
 
     default this.EnterScope scope = ()
 
-    abstract ExitScope : scope:DbProfilingSessionScope -> unit
+    abstract LeaveScope : scope:DbProfilingSessionScope -> unit
 
-    default this.ExitScope scope = ()
+    default this.LeaveScope scope = ()
 
     interface IDbProfilingSession with
         member this.BeginQuery command = 
-            scope.Query()
+            currentScope.Query()
             this.BeginQuery command
 
         member this.EndQuery(command, elapsed) = 
-            scope.QueryElapsed elapsed
+            currentScope.QueryElapsed elapsed
             this.EndQuery(command, elapsed)
 
         member this.BeginRow reader = 
             this.BeginRow(reader)
 
         member this.EndRow(reader, elapsed) =
-            scope.Row()
+            currentScope.Row()
             this.EndRow(reader, elapsed)
 
     interface IProfilingSessionScopeListener with 
-        member this.EnterScope scope = this.EnterScope scope
+        member this.EnterScope(oldScope, newScope) = 
+            currentScope <- newScope
+            this.EnterScope currentScope
 
-        member this.ExitScope scope = this.ExitScope scope
+        member this.LeaveScope(oldScope, newScope) = 
+            this.LeaveScope oldScope
+            currentScope <- newScope
