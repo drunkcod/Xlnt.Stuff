@@ -6,8 +6,9 @@ open System.Data.Common
 open System.Threading
 open Xlnt
 
-type DbProfiler() =
-    member this.Connect(listener:IDbProfilingSession, db) = 
+module DbProfiler =
+    [<CompiledName("Connect")>]
+    let connect (listener:IDbProfilingSession) db = 
         let db' = new ProfiledConnection(db)
         db'.CommandCreated.Add(fun e ->
             e.BeginQuery.Add(fun e -> listener.BeginQuery(e))

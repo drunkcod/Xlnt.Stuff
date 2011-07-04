@@ -38,6 +38,8 @@ type ProfiledConnection(inner:DbConnection) =
             commandCreated.Trigger(command)
             command :> DbCommand
 
+        override this.EnlistTransaction transaction = inner.EnlistTransaction transaction
+
         override this.Open() = 
             opening.Trigger()
             inner.Open()

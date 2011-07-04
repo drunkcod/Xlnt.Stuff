@@ -23,8 +23,7 @@ namespace Xlnt.Data
         [DisplayAs("Ado.Net usage")]
         public void basic_usage() {
             var session = new DbProfilingSession();
-            var profiler = new DbProfiler();
-            var db = profiler.Connect(session, OpenSampleConnection());
+            var db = DbProfiler.Connect(session, OpenSampleConnection());
 
             var query = db.CreateCommand();
             query.CommandText = "select sum(value) from Numbers";
@@ -54,8 +53,7 @@ namespace Xlnt.Data
 
             public void compare_deferred_and_local_execution() {
                 var session = new DbProfilingSession();
-                var profiler = new DbProfiler();
-                var context = new DataContext(profiler.Connect(session, OpenSampleConnection()));
+                var context = new DataContext(DbProfiler.Connect(session, OpenSampleConnection()));
                 var numbers = context.GetTable<Number>(); 
 
                 var deffered = session.Scoped("Sent to database for execution", _ => {
