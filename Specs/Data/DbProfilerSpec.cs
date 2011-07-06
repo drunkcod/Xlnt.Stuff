@@ -84,10 +84,16 @@ namespace Xlnt.Data
                     using(var db = OpenSampleConnection()) {
                         var context = new DataContext(DbProfiler.Connect(session, db));
                         var numbers = context.GetTable<Number>(); 
-
-                        session.Scoped("#nolock;" + context.Mapping.GetTable(typeof(Number)).TableName, scope => {
+                        var tableName = context.Mapping.GetTable(typeof(Number)).TableName;
+                        Console.WriteLine("{0} {1}", context.Mapping.GetTable(typeof(Number)), tableName);
+                        session.Scoped("#nolock;" + tableName, scope => {
                             numbers.Count();
                         });
+
+                        rewrite.PushNoLockScope(tableName);
+                        numbers.Count();
+                        rewrite.PopNoLockScope();
+                        numbers.Count();
                     }
                 }
             }

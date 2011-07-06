@@ -14,11 +14,6 @@ type LinqQueryRewritingSession() =
 
     let isNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
 
-    let ifNoLockScope f scope = 
-        if isNoLockHint scope then
-            f scope
-            nolockCache <- HashSet(nolock |> Seq.collect id)
-
     let withHintsFor it x =
         if nolockCache.Contains(it) then
             x + " with(nolock)"
@@ -26,9 +21,14 @@ type LinqQueryRewritingSession() =
 
     let addHints (m:Match) = m.Value |> withHintsFor m.Groups.[TableIdGroup ].Value
  
-    member this.PushNoLockScope scope = nolock.Push(scope)
+    let updateCache f = 
+        let r = f nolock
+        nolockCache <- HashSet(nolock |> Seq.collect id |> Seq.map (fun (x:String) -> x.Trim([|'[';']'|])))
+        r
 
-    member this.PopNoLockScope() = nolock.Pop()
+    member this.PushNoLockScope ([<ParamArray>] scope) = updateCache (fun x -> x.Push(scope)) 
+
+    member this.PopNoLockScope() = updateCache (fun x -> x.Pop())
 
     member this.Rewrite query = TablePattern.Replace(query, addHints)
 
@@ -36,14 +36,15 @@ type LinqQueryRewritingSession() =
         member this.BeginQuery query =
             query.CommandText <- this.Rewrite query.CommandText
         
-        member this.EndQuery(command, elapsed) = ()
-        
-        member this.BeginRow reader = ()
-        
+        member this.EndQuery(command, elapsed) = ()        
+        member this.BeginRow reader = ()        
         member this.EndRow(reader, elapsed) = ()
 
     interface IProfilingSessionScopeListener with
         member this.EnterScope(oldScope, newScope) =
-            newScope |> ifNoLockScope (fun scope -> this.PushNoLockScope(scope.ScopeName.Substring(NoLockPrefix.Length).Split([|';'|], StringSplitOptions.RemoveEmptyEntries)))
+            if isNoLockHint newScope then   
+                this.PushNoLockScope(newScope.ScopeName.Substring(NoLockPrefix.Length).Split([|';'|], StringSplitOptions.RemoveEmptyEntries))
 
-        member this.LeaveScope(oldScope, newScop) = oldScope |> ifNoLockScope (fun _ -> this.PopNoLockScope() |> ignore)
+        member this.LeaveScope(oldScope, newScop) = 
+            if isNoLockHint oldScope then
+                this.PopNoLockScope() |> ignore
