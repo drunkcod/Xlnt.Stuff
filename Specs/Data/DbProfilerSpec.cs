@@ -74,6 +74,23 @@ namespace Xlnt.Data
                 Verify.That(() => session.RowCount == deffered.RowCount + inMemory.RowCount);
 
             }
+
+            [Context("query rewriting")]
+            public class RandomBitsOfHacking
+            {
+                public void sample() {
+                    var rewrite = new LinqQueryRewritingSession();
+                    var session = new DbProfilingSession(rewrite, rewrite);
+                    using(var db = OpenSampleConnection()) {
+                        var context = new DataContext(DbProfiler.Connect(session, db));
+                        var numbers = context.GetTable<Number>(); 
+
+                        session.Scoped("#nolock;" + context.Mapping.GetTable(typeof(Number)).TableName, scope => {
+                            numbers.Count();
+                        });
+                    }
+                }
+            }
         }
     }
 }

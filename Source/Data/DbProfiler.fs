@@ -8,7 +8,7 @@ open Xlnt
 
 module DbProfiler =
     [<CompiledName("Connect")>]
-    let connect (listener:IDbProfilingSession) db = 
+    let connect (listener:DbProfilingSession) db = 
         let db' = new ProfiledConnection(db)
         db'.CommandCreated.Add(fun e ->
             e.BeginQuery.Add(fun e -> listener.BeginQuery(e))

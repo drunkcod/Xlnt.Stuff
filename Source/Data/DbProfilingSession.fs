@@ -48,69 +48,51 @@ and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outer
     interface IDisposable with
         member this.Dispose() = this.Leave()
 
-type IDbProfilingSession =   
+type IProfilingSessionQueryListener =   
     abstract BeginQuery : query:ProfiledCommand -> unit
     abstract EndQuery : query:ProfiledCommand * elapsed:TimeSpan -> unit
     abstract BeginRow : reader:ProfiledDataReader -> unit
     abstract EndRow : reader:ProfiledDataReader * elapsed:TimeSpan -> unit
 
-type DbProfilingSession() as this =
+type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListener:IProfilingSessionScopeListener) as this =
     let globalScope = new DbProfilingSessionScope("<global>", this, None)
     let mutable currentScope = globalScope
 
     member this.QueryCount = globalScope.QueryCount
-
     member this.RowCount = globalScope.RowCount
-
     member this.QueryTime = globalScope.QueryTime
 
-    abstract BeginQuery : query:ProfiledCommand -> unit
+    member this.BeginQuery query = 
+        currentScope.Query()
+        queryListener.BeginQuery query
     
-    default this.BeginQuery query = ()
+    member this.EndQuery(query, elapsed) = 
+        currentScope.QueryElapsed elapsed
+        queryListener.EndQuery(query, elapsed)
 
-    abstract EndQuery : query:ProfiledCommand * elapsed:TimeSpan -> unit
+    member this.BeginRow reader = queryListener.BeginRow reader 
 
-    default this.EndQuery(query, elapsed) = ()
-
-    abstract BeginRow : reader:ProfiledDataReader -> unit
-
-    default this.BeginRow(reader) = ()
-
-    abstract EndRow : reader:ProfiledDataReader * elapsed:TimeSpan -> unit
-
-    default this.EndRow(reader, elapsed) = ()
+    member this.EndRow(reader, elapsed) = 
+        currentScope.Row()
+        queryListener.EndRow(reader, elapsed)
 
     member this.Scoped name action = currentScope.Scoped name action
 
-    abstract EnterScope : scope:DbProfilingSessionScope -> unit
-
-    default this.EnterScope scope = ()
-
-    abstract LeaveScope : scope:DbProfilingSessionScope -> unit
-
-    default this.LeaveScope scope = ()
-
-    interface IDbProfilingSession with
-        member this.BeginQuery command = 
-            currentScope.Query()
-            this.BeginQuery command
-
-        member this.EndQuery(command, elapsed) = 
-            currentScope.QueryElapsed elapsed
-            this.EndQuery(command, elapsed)
-
-        member this.BeginRow reader = 
-            this.BeginRow(reader)
-
-        member this.EndRow(reader, elapsed) =
-            currentScope.Row()
-            this.EndRow(reader, elapsed)
+    new() = DbProfilingSession({ new IProfilingSessionQueryListener with
+            member this.BeginQuery command = ()
+            member this.EndQuery(command, elapsed) = ()
+            member this.BeginRow reader = ()
+            member this.EndRow(reader, elapsed) = ()
+        }, { new IProfilingSessionScopeListener with
+            member this.EnterScope(oldScope, newScope) = ()
+            member this.LeaveScope(oldScope, newScope) = () 
+        })
 
     interface IProfilingSessionScopeListener with 
         member this.EnterScope(oldScope, newScope) = 
             currentScope <- newScope
-            this.EnterScope currentScope
+            scopeListener.EnterScope(oldScope, newScope)
 
-        member this.LeaveScope(oldScope, newScope) = 
-            this.LeaveScope oldScope
+        member this.LeaveScope(oldScope, newScope) =
+            scopeListener.LeaveScope(oldScope, newScope)
             currentScope <- newScope

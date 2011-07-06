@@ -51,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="LinqQueryRewriting.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
     <Reference Include="Cone, Version=0.0.2.23, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
