@@ -13,11 +13,8 @@ and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outer
     let mutable rowCount = 0
 
     member this.ScopeName = name
-
     member this.QueryCount = queryCount
-    
     member this.QueryTime = queryTime
-
     member this.RowCount = rowCount
 
     member this.Scoped name (action:Action<_>) =
@@ -78,7 +75,8 @@ type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListe
 
     member this.Scoped name action = currentScope.Scoped name action
 
-    new() = DbProfilingSession({ new IProfilingSessionQueryListener with
+    new() =
+        DbProfilingSession({ new IProfilingSessionQueryListener with
             member this.BeginQuery command = ()
             member this.EndQuery(command, elapsed) = ()
             member this.BeginRow reader = ()

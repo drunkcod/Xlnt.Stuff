@@ -20,16 +20,16 @@ type LinqQueryRewritingSession() =
         else x
 
     let addHints (m:Match) = m.Value |> withHintsFor m.Groups.[TableIdGroup ].Value
- 
+    
+    let unescapeName (s:String) = s.TrimStart([|'['|]).TrimEnd([|']'|])
+
     let updateCache f = 
         let r = f nolock
-        nolockCache <- HashSet(nolock |> Seq.collect id |> Seq.map (fun (x:String) -> x.Trim([|'[';']'|])))
+        nolockCache <- HashSet(nolock |> Seq.collect id |> Seq.map unescapeName)
         r
 
     member this.PushNoLockScope ([<ParamArray>] scope) = updateCache (fun x -> x.Push(scope)) 
-
     member this.PopNoLockScope() = updateCache (fun x -> x.Pop())
-
     member this.Rewrite query = TablePattern.Replace(query, addHints)
 
     interface IProfilingSessionQueryListener with
