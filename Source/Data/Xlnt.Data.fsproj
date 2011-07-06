@@ -43,6 +43,7 @@
     <Compile Include="DbProfiler.fs" />
     <Compile Include="DbConnection.fs" />
     <Compile Include="LinqQueryRewritingSession.fs" />
+    <Compile Include="TracingEventProfilingSessionQueryListener.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

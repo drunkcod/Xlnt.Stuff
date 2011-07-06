@@ -72,20 +72,23 @@ namespace Xlnt.Data
 
                 Verify.That(() => session.QueryCount == deffered.QueryCount + inMemory.QueryCount);
                 Verify.That(() => session.RowCount == deffered.RowCount + inMemory.RowCount);
-
             }
 
             [Context("query rewriting")]
-            public class RandomBitsOfHacking
+            public class QueryRewriting
             {
                 public void sample() {
                     var rewrite = new LinqQueryRewritingSession();
-                    var session = new DbProfilingSession(rewrite, rewrite);
+                    var trace = new TracingEventProfilingSessionQueryListener(rewrite);
+                    trace.EndQuery += (s, e) => {
+                        Console.WriteLine("({0}) {1}", e.Elapsed, e.CommandText);
+                    };
+
+                    var session = new DbProfilingSession(trace, rewrite);
                     using(var db = OpenSampleConnection()) {
                         var context = new DataContext(DbProfiler.Connect(session, db));
                         var numbers = context.GetTable<Number>(); 
                         var tableName = context.Mapping.GetTable(typeof(Number)).TableName;
-                        Console.WriteLine("{0} {1}", context.Mapping.GetTable(typeof(Number)), tableName);
                         session.Scoped("#nolock;" + tableName, scope => {
                             numbers.Count();
                         });
