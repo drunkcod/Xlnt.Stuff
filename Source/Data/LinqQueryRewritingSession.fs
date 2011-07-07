@@ -25,7 +25,7 @@ type LinqQueryRewritingSession() =
 
     let updateCache f = 
         let r = f nolock
-        nolockCache <- HashSet(nolock |> Seq.collect id |> Seq.map unescapeName)
+        nolockCache <- HashSet(nolock |> (Seq.collect << Seq.map) unescapeName)
         r
 
     member this.PushNoLockScope ([<ParamArray>] scope) = updateCache (fun x -> x.Push(scope)) 

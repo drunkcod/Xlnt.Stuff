@@ -51,6 +51,16 @@ type IProfilingSessionQueryListener =
     abstract BeginRow : reader:ProfiledDataReader -> unit
     abstract EndRow : reader:ProfiledDataReader * elapsed:TimeSpan -> unit
 
+type NullProfilingSessionListener() =
+    interface IProfilingSessionScopeListener with
+        member this.EnterScope(oldScope, newScope) = ()
+        member this.LeaveScope(oldScope, newScope) = ()
+    interface IProfilingSessionQueryListener with
+        member this.BeginQuery query = ()
+        member this.EndQuery(query, elapsed) = ()
+        member this.BeginRow reader = ()
+        member this.EndRow(reader, elapsed) = ()
+
 type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListener:IProfilingSessionScopeListener) as this =
     let globalScope = new DbProfilingSessionScope("<global>", this, None)
     let mutable currentScope = globalScope
@@ -76,15 +86,8 @@ type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListe
     member this.Scoped name action = currentScope.Scoped name action
 
     new() =
-        DbProfilingSession({ new IProfilingSessionQueryListener with
-            member this.BeginQuery command = ()
-            member this.EndQuery(command, elapsed) = ()
-            member this.BeginRow reader = ()
-            member this.EndRow(reader, elapsed) = ()
-        }, { new IProfilingSessionScopeListener with
-            member this.EnterScope(oldScope, newScope) = ()
-            member this.LeaveScope(oldScope, newScope) = () 
-        })
+        let nop = NullProfilingSessionListener()
+        DbProfilingSession(nop, nop)
 
     interface IProfilingSessionScopeListener with 
         member this.EnterScope(oldScope, newScope) = 
