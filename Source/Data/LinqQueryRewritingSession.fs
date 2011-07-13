@@ -5,21 +5,29 @@ open System.Collections.Generic
 open System.Text.RegularExpressions
 
 type LinqQueryRewritingSession() =
-    static let TablePattern = Regex(@"\[(?<id>.+?)\] AS \[.+?\]", RegexOptions.Compiled)
+    static let TablePattern = Regex(@"(\[(?<owner>.+?)\]\.){0,1}\[(?<id>.+?)\] AS \[.+?\]", RegexOptions.Compiled)
+    static let OwnerGroup = TablePattern.GroupNumberFromName "owner"
     static let TableIdGroup = TablePattern.GroupNumberFromName "id"
     static let [<Literal>] NoLockPrefix = "#nolock;"
 
     let nolock = Stack()
     let mutable nolockCache = HashSet()
 
-    let isNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
+    let hasNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
 
     let withHintsFor it x =
         if nolockCache.Contains(it) then
             x + " with(nolock)"
         else x
 
-    let addHints (m:Match) = m.Value |> withHintsFor m.Groups.[TableIdGroup ].Value
+    let addHints (m:Match) = 
+        let table = 
+            let id = m.Groups.[TableIdGroup].Value
+            if m.Groups.[OwnerGroup].Success then
+                m.Groups.[OwnerGroup].Value + "." + id
+            else
+                id
+        m.Value |> withHintsFor table
     
     let unescapeName (s:String) = s.TrimStart([|'['|]).TrimEnd([|']'|])
 
@@ -42,9 +50,9 @@ type LinqQueryRewritingSession() =
 
     interface IProfilingSessionScopeListener with
         member this.EnterScope(oldScope, newScope) =
-            if isNoLockHint newScope then   
+            if newScope |> hasNoLockHint then   
                 this.PushNoLockScope(newScope.ScopeName.Substring(NoLockPrefix.Length).Split([|';'|], StringSplitOptions.RemoveEmptyEntries))
 
         member this.LeaveScope(oldScope, newScop) = 
-            if isNoLockHint oldScope then
+            if oldScope |> hasNoLockHint then
                 this.PopNoLockScope() |> ignore

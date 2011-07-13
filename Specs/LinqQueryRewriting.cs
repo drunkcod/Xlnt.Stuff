@@ -14,6 +14,16 @@ namespace Xlnt.Data
             Verify.That(() => session.Rewrite(input) == expected);
         }
 
+        [Row("[dbo].[MyTable] AS [t0]", "[dbo].[MyTable] AS [t0] with(nolock)")
+        ,DisplayAs("{0} -> {1}")]
+        public void nolock_with_owner_prefix(string input, string expected) {
+            var session = new LinqQueryRewritingSession();
+            session.PushNoLockScope("dbo.MyTable");
+            Verify.That(() => session.Rewrite(input) == expected);
+        }
+
+
+
         public void handle_escaped_table_names() {
             var session = new LinqQueryRewritingSession();
             session.PushNoLockScope("[MyTable]");
