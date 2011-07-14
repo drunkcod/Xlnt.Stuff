@@ -25,11 +25,6 @@ namespace Xlnt.Web.Mvc
             Verify.That(() => url.Action(() => Index(42)) == "/Foo/42/Index");
         }
 
-        public void niladic_indirect_lambda_action() {
-            var url = UrlHelperFor("Foo");
-            Verify.That(() => Indirect(42, x => url.Action(() => Index(x))) == "/Foo/42/Index");
-        }
-
         public void multi_argument_action() {
             var url = UrlHelperFor("Multiple");
             Verify.That(() => url.Action(() => Foo(7, "Moar")) == "/Multiple/7/Foo/Moar");

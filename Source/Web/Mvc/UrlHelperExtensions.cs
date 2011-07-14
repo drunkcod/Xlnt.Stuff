@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Routing;
-using System.Collections.ObjectModel;
 
 namespace Xlnt.Web.Mvc
 {
@@ -39,7 +39,7 @@ namespace Xlnt.Web.Mvc
                     var memberExpression = expr as MemberExpression;
                     var field = (FieldInfo)memberExpression.Member;
                     return field.GetValue(Value(memberExpression.Expression));
-                default: throw new NotSupportedException();
+                default: throw new NotSupportedException("Unsupported NodeType: {0} ({1})".Format(expr.NodeType, expr));
             }
         }
     }
