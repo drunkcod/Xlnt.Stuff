@@ -29,7 +29,11 @@ type LinqQueryRewritingSession() =
                 id
         m.Value |> withHintsFor table
     
-    let unescapeName (s:String) = s.TrimStart([|'['|]).TrimEnd([|']'|])
+    let unescapeName (s:String) = 
+        let parts = s.Split([|'.'|])
+        for i = 0 to parts.Length - 1 do
+            parts.[i] <- parts.[i].TrimStart([|'['|]).TrimEnd([|']'|])
+        String.Join(".", parts)
 
     let updateCache f = 
         let r = f nolock

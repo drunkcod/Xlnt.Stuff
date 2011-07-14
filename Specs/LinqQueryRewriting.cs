@@ -14,11 +14,12 @@ namespace Xlnt.Data
             Verify.That(() => session.Rewrite(input) == expected);
         }
 
-        [Row("[dbo].[MyTable] AS [t0]", "[dbo].[MyTable] AS [t0] with(nolock)")
-        ,DisplayAs("{0} -> {1}")]
-        public void nolock_with_owner_prefix(string input, string expected) {
+        [Row("dbo.MyTable", "[dbo].[MyTable] AS [t0]", "[dbo].[MyTable] AS [t0] with(nolock)")
+        ,Row("dbo.[MyTable]", "[dbo].[MyTable] AS [t0]", "[dbo].[MyTable] AS [t0] with(nolock)")
+        ,DisplayAs("{1} -> {2}")]
+        public void nolock_with_owner_prefix(string table, string input, string expected) {
             var session = new LinqQueryRewritingSession();
-            session.PushNoLockScope("dbo.MyTable");
+            session.PushNoLockScope(table);
             Verify.That(() => session.Rewrite(input) == expected);
         }
 
