@@ -4,11 +4,20 @@ open System
 open System.Data.Common
 open Xlnt
 
+type ProfiledTransaction(connection, inner:DbTransaction) =
+    inherit DbTransaction() with
+        member internal this.Inner = inner
+        override this.DbConnection = connection
+        override this.IsolationLevel = inner.IsolationLevel
+        override this.Commit() = inner.Commit()
+        override this.Rollback() = inner.Rollback()
+
 type ProfiledCommand(inner:DbCommand) = 
     inherit DbCommand() with 
         let beginQuery = new Event<_>()
         let endQuery = new Event<_>()
         let readerCreated = new Event<_>()
+        let mutable transaction = (null :> DbTransaction)
 
         member this.Query f = 
             beginQuery.Trigger(this)
@@ -34,8 +43,13 @@ type ProfiledCommand(inner:DbCommand) =
             with get() = inner.Parameters
 
         override this.DbTransaction
-            with get() = inner.Transaction
-            and set(value) = inner.Transaction <- value
+            with get() = transaction
+            and set(value) = 
+                transaction <- value
+                inner.Transaction <- 
+                    match value with
+                    | :? ProfiledTransaction as x -> x.Inner
+                    | x -> x
 
         override this.DesignTimeVisible 
             with get() = inner.DesignTimeVisible

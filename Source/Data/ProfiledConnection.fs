@@ -25,7 +25,7 @@ type ProfiledConnection(inner:DbConnection) =
         override this.State
             with get() = inner.State
 
-        override this.BeginDbTransaction(isolationLevel) = inner.BeginTransaction(isolationLevel)
+        override this.BeginDbTransaction(isolationLevel) = new ProfiledTransaction(this, inner.BeginTransaction(isolationLevel)) :> DbTransaction
 
         override this.Close() = 
             closing.Trigger()
