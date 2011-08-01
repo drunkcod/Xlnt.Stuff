@@ -12,14 +12,14 @@ type ProfiledTransaction(connection, inner:DbTransaction) =
         override this.Commit() = inner.Commit()
         override this.Rollback() = inner.Rollback()
 
-type ProfiledCommand(inner:DbCommand) = 
+type ProfiledCommand(inner:DbCommand) as this = 
     inherit DbCommand() with 
         let beginQuery = new Event<_>()
         let endQuery = new Event<_>()
         let readerCreated = new Event<_>()
         let mutable transaction = (null :> DbTransaction)
 
-        member this.Query f = 
+        let query f = 
             beginQuery.Trigger(this)
             Timed.action f (fun (_, elapsed) -> endQuery.Trigger(this, elapsed))
 
@@ -61,27 +61,25 @@ type ProfiledCommand(inner:DbCommand) =
 
         override this.Cancel() = inner.Cancel()
 
+        override this.Dispose disposing = 
+            if disposing then
+                inner.Dispose()
+
         override this.CreateDbParameter() = inner.CreateParameter()
 
         override this.ExecuteDbDataReader(behavior) =
-            let reader = new ProfiledDataReader(this.Query(fun () -> inner.ExecuteReader(behavior)))
+            let reader = new ProfiledDataReader(query (fun () -> inner.ExecuteReader(behavior)))
             readerCreated.Trigger(reader)
             reader :> DbDataReader
 
-        override this.ExecuteNonQuery() = this.Query inner.ExecuteNonQuery
+        override this.ExecuteNonQuery() = query inner.ExecuteNonQuery
 
-        override this.ExecuteScalar() = this.Query inner.ExecuteScalar 
+        override this.ExecuteScalar() = query inner.ExecuteScalar 
 
         override this.Prepare() = inner.Prepare()
-
-        interface IDisposable with
-            member this.Dispose() = 
-                inner.Dispose()
-                base.Dispose()
 
         member this.BeginQuery = beginQuery.Publish
 
         member this.EndQuery = endQuery.Publish
 
         member this.ReaderCreated = readerCreated.Publish
-

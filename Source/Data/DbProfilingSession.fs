@@ -2,12 +2,10 @@
 
 open System
 open System.Collections.Generic
+open System.Diagnostics.CodeAnalysis
 
-type IProfilingSessionScopeListener = 
-    abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
-    abstract LeaveScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
-
-and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outerScope) =
+[<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
+type DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outerScope) =
     let mutable queryCount = 0
     let mutable queryTime = TimeSpan.Zero
     let mutable rowCount = 0
@@ -43,7 +41,13 @@ and DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outer
         outerScope |> Option.iter (fun x -> x.Row())
 
     interface IDisposable with
+        [<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
         member this.Dispose() = this.Leave()
+
+and IProfilingSessionScopeListener = 
+    abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
+    abstract LeaveScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
+
 
 type IProfilingSessionQueryListener =   
     abstract BeginQuery : query:ProfiledCommand -> unit

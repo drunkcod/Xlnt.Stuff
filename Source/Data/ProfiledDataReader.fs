@@ -84,10 +84,9 @@ type ProfiledDataReader(inner:DbDataReader) =
             beginRow.Trigger(this)            
             Timed.action inner.Read (fun (success, elapsed) -> if success then endRow.Trigger((this, elapsed)))
 
-        interface IDisposable with
-            member this.Dispose() = 
+        override this.Dispose disposing = 
+            if disposing then
                 inner.Dispose()
-                base.Dispose()
 
         member this.BeginRow = beginRow.Publish
         member this.EndRow = endRow.Publish
