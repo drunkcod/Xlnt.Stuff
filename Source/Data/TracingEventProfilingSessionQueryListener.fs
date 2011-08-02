@@ -33,7 +33,6 @@ type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListe
     let endQuery = CLIEvent()
     let beginRow = CLIEvent()
     let endRow = CLIEvent()
-    let mutable batchTimer = null :> Stopwatch
 
     new() = TracingEventProfilingSessionQueryListener(NullProfilingSessionListener())
 
@@ -48,12 +47,10 @@ type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListe
         member this.BeginBatch query =
             beginBatch.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
             inner.BeginBatch query
-            batchTimer <- Stopwatch.StartNew()
 
-        member this.EndBatch query =
-            batchTimer.Stop()
-            inner.EndBatch query
-            endBatch.Trigger(this, QueryEventArgs(query, batchTimer.Elapsed))
+        member this.EndBatch(query, elapsed)=
+            inner.EndBatch(query, elapsed)
+            endBatch.Trigger(this, QueryEventArgs(query, elapsed))
 
         member this.BeginQuery query =
             beginQuery.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))

@@ -53,9 +53,13 @@
   <ItemGroup>
     <Compile Include="LinqQueryRewriting.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
-    <Reference Include="Cone, Version=0.0.2.23, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Cone, Version=0.0.2.24, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\Cone.dll</HintPath>
+    </Reference>
+    <Reference Include="Cone.Addin, Version=0.0.2.24, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\Cone.Addin.dll</HintPath>
     </Reference>
     <Reference Include="Moq, Version=4.0.10827.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -63,7 +67,7 @@
     </Reference>
     <Reference Include="nunit.framework, Version=2.5.10.11092, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\nunit.framework.dll</HintPath>
+      <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data.DataSetExtensions">

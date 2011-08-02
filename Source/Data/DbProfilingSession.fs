@@ -52,7 +52,7 @@ and IProfilingSessionScopeListener =
 
 type IProfilingSessionQueryListener =
     abstract BeginBatch : query:ProfiledCommand -> unit
-    abstract EndBatch : query:ProfiledCommand -> unit
+    abstract EndBatch : query:ProfiledCommand * elapsed:TimeSpan -> unit
     abstract BeginQuery : query:ProfiledCommand -> unit
     abstract EndQuery : query:ProfiledCommand * elapsed:TimeSpan -> unit
     abstract BeginRow : reader:ProfiledDataReader -> unit
@@ -64,7 +64,7 @@ type NullProfilingSessionListener() =
         member this.LeaveScope(oldScope, newScope) = ()
     interface IProfilingSessionQueryListener with
         member this.BeginBatch query = ()
-        member this.EndBatch query = ()
+        member this.EndBatch(query, elapsed) = ()
         member this.BeginQuery query = ()
         member this.EndQuery(query, elapsed) = ()
         member this.BeginRow reader = ()

@@ -36,6 +36,23 @@ namespace Xlnt.Data
             Verify.That(() => batchStarted.HasBeenRaised);
         }
 
+        public void batch_starts_before_query() {
+            var trace = new TracingEventProfilingSessionQueryListener();
+            var session = new DbProfilingSession(trace);
+            var db = DbProfiler.Connect(session, OpenSampleConnection());
+
+            var batchStarted = new EventSpy<QueryEventArgs>();
+            var queryStarted = new EventSpy<QueryEventArgs>();
+            trace.BeginBatch += batchStarted;
+            trace.BeginQuery += queryStarted;
+
+            var query = db.CreateCommand();
+            query.CommandText = "select * from Numbers";
+            query.ExecuteReader();
+
+            Verify.That(() => batchStarted.RaisedBefore(queryStarted));
+        }
+
         public void EndBatch_when_reader_closed() {
             var trace = new TracingEventProfilingSessionQueryListener();
             var session = new DbProfilingSession(trace);
