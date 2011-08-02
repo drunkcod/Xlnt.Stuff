@@ -13,17 +13,10 @@ type ProfiledConnection(inner:DbConnection) =
             with get() = inner.ConnectionString
             and set(value) = inner.ConnectionString <- value
         
-        override this.Database 
-            with get() = inner.Database
-
-        override this.DataSource
-            with get() = inner.DataSource
-
-        override this.ServerVersion
-            with get() = inner.ServerVersion
-
-        override this.State
-            with get() = inner.State
+        override this.Database = inner.Database
+        override this.DataSource = inner.DataSource
+        override this.ServerVersion = inner.ServerVersion
+        override this.State = inner.State
 
         override this.BeginDbTransaction(isolationLevel) = new ProfiledTransaction(this, inner.BeginTransaction(isolationLevel)) :> DbTransaction
 
@@ -50,7 +43,5 @@ type ProfiledConnection(inner:DbConnection) =
             base.Dispose disposing
 
         member this.Opening = opening.Publish
-
         member this.Closing = closing.Publish
-
         member this.CommandCreated = commandCreated.Publish
