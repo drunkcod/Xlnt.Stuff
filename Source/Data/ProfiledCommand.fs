@@ -12,14 +12,14 @@ type ProfiledTransaction(connection, inner:DbTransaction) =
         override this.Commit() = inner.Commit()
         override this.Rollback() = inner.Rollback()
 
-type ProfiledCommand(inner:DbCommand) as this = 
+type ProfiledCommand(inner:DbCommand) = 
     inherit DbCommand() with 
         let beginQuery = new Event<_>()
         let endQuery = new Event<_>()
         let readerCreated = new Event<_>()
         let mutable transaction = (null :> DbTransaction)
 
-        let query f = 
+        member private this.Query f = 
             beginQuery.Trigger(this)
             Timed.action f (fun (_, elapsed) -> endQuery.Trigger(this, elapsed))
 
@@ -68,13 +68,13 @@ type ProfiledCommand(inner:DbCommand) as this =
         override this.CreateDbParameter() = inner.CreateParameter()
 
         override this.ExecuteDbDataReader(behavior) =
-            let reader = new ProfiledDataReader(query (fun () -> inner.ExecuteReader(behavior)))
+            let reader = new ProfiledDataReader(this.Query (fun () -> inner.ExecuteReader(behavior)))
             readerCreated.Trigger(reader)
             reader :> DbDataReader
 
-        override this.ExecuteNonQuery() = query inner.ExecuteNonQuery
+        override this.ExecuteNonQuery() = this.Query inner.ExecuteNonQuery
 
-        override this.ExecuteScalar() = query inner.ExecuteScalar 
+        override this.ExecuteScalar() = this.Query inner.ExecuteScalar 
 
         override this.Prepare() = inner.Prepare()
 

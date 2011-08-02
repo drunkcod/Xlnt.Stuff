@@ -10,10 +10,13 @@ module DbProfiler =
     [<CompiledName("Connect")>]
     let connect (listener:DbProfilingSession) db = 
         let db' = new ProfiledConnection(db)
-        db'.CommandCreated.Add(fun e ->
-            e.BeginQuery.Add(fun e -> listener.BeginQuery(e))
-            e.EndQuery.Add(fun (e, elapsed) -> listener.EndQuery(e, elapsed))
-            e.ReaderCreated.Add(fun e -> 
-                e.BeginRow.Add(listener.BeginRow)
-                e.EndRow.Add(listener.EndRow)))
+        db'.CommandCreated.Add(fun command ->
+            command.BeginQuery.Add(fun e -> 
+                listener.BeginBatch(e)
+                listener.BeginQuery(e))
+            command.EndQuery.Add(fun (e, elapsed) -> listener.EndQuery(e, elapsed))
+            command.ReaderCreated.Add(fun reader -> 
+                reader.BeginRow.Add(listener.BeginRow)
+                reader.EndRow.Add(listener.EndRow)
+                reader.Closed.Add(fun _ -> listener.EndBatch(command))))
         db'

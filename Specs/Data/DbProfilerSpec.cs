@@ -6,6 +6,7 @@ using System.Data.SqlServerCe;
 using System.IO;
 using System.Linq;
 using Cone;
+using Cone.Helpers;
 
 namespace Xlnt.Data
 {
@@ -18,6 +19,37 @@ namespace Xlnt.Data
             var connection = new SqlCeConnection(string.Format("DataSource={0}", Path.Combine(DataPath, "Sample.sdf")));
             connection.Open();
             return connection;
+        }
+
+        public void BatchStarted_when_executing_reader() {
+            var trace = new TracingEventProfilingSessionQueryListener();
+            var session = new DbProfilingSession(trace);
+            var db = DbProfiler.Connect(session, OpenSampleConnection());
+
+            var batchStarted = new EventSpy<QueryEventArgs>();
+            trace.BeginBatch += batchStarted;
+
+            var query = db.CreateCommand();
+            query.CommandText = "select * from Numbers";
+            query.ExecuteReader();
+
+            Verify.That(() => batchStarted.HasBeenRaised);
+        }
+
+        public void EndBatch_when_reader_closed() {
+            var trace = new TracingEventProfilingSessionQueryListener();
+            var session = new DbProfilingSession(trace);
+            var db = DbProfiler.Connect(session, OpenSampleConnection());
+
+            var batchEnded = new EventSpy<QueryEventArgs>();
+            trace.EndBatch += batchEnded;
+
+            var query = db.CreateCommand();
+            query.CommandText = "select * from Numbers";
+            
+            using(var reader = query.ExecuteReader())
+                Verify.That(() => !batchEnded.HasBeenRaised);
+            Verify.That(() => batchEnded.HasBeenRaised);
         }
 
         [DisplayAs("Ado.Net usage")]

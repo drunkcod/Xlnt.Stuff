@@ -3,6 +3,7 @@
 open System
 open System.Collections.Generic
 open System.Data
+open System.Diagnostics
 
 type QueryParameters = { ParameterName : String; Value : obj }
 
@@ -26,17 +27,34 @@ type RowEventArgs(reader:IDataReader, elapsed) =
 type CLIEvent<'T> when 'T :> EventArgs = Event<EventHandler<'T>,'T>
 
 type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListener) =
+    let beginBatch = CLIEvent()
+    let endBatch = CLIEvent()
     let beginQuery = CLIEvent()
     let endQuery = CLIEvent()
     let beginRow = CLIEvent()
     let endRow = CLIEvent()
+    let mutable batchTimer = null :> Stopwatch
 
+    new() = TracingEventProfilingSessionQueryListener(NullProfilingSessionListener())
+
+    [<CLIEvent>] member this.BeginBatch = beginBatch.Publish
+    [<CLIEvent>] member this.EndBatch = endBatch.Publish
     [<CLIEvent>] member this.BeginQuery = beginQuery.Publish
     [<CLIEvent>] member this.EndQuery = endQuery.Publish
     [<CLIEvent>] member this.BeginRow = beginRow.Publish
     [<CLIEvent>] member this.EndRow = endRow.Publish
 
     interface IProfilingSessionQueryListener with
+        member this.BeginBatch query =
+            beginBatch.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
+            inner.BeginBatch query
+            batchTimer <- Stopwatch.StartNew()
+
+        member this.EndBatch query =
+            batchTimer.Stop()
+            inner.EndBatch query
+            endBatch.Trigger(this, QueryEventArgs(query, batchTimer.Elapsed))
+
         member this.BeginQuery query =
             beginQuery.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
             inner.BeginQuery query

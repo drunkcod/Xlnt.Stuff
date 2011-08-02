@@ -8,6 +8,7 @@ type ProfiledDataReader(inner:DbDataReader) =
     inherit DbDataReader() with
         let beginRow = new Event<_>()
         let endRow = new Event<_>()
+        let closed = new Event<_>()
 
         override this.Depth
             with get() = inner.Depth
@@ -30,7 +31,9 @@ type ProfiledDataReader(inner:DbDataReader) =
         override this.Item
             with get(name:string) = inner.[name]
 
-        override this.Close() = inner.Close()
+        override this.Close() = 
+            inner.Close()
+            closed.Trigger(this)
 
         override this.GetDataTypeName(ordinal) = inner.GetDataTypeName(ordinal)
 
@@ -87,7 +90,9 @@ type ProfiledDataReader(inner:DbDataReader) =
         override this.Dispose disposing = 
             if disposing then
                 inner.Dispose()
+            base.Dispose disposing
 
         member this.BeginRow = beginRow.Publish
         member this.EndRow = endRow.Publish
+        member this.Closed = closed.Publish
 

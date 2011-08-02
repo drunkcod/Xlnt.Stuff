@@ -42,14 +42,17 @@ type DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, oute
 
     interface IDisposable with
         [<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
-        member this.Dispose() = this.Leave()
+        member this.Dispose() = 
+            this.Leave()
+            GC.SuppressFinalize(this)
 
 and IProfilingSessionScopeListener = 
     abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
     abstract LeaveScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
 
-
-type IProfilingSessionQueryListener =   
+type IProfilingSessionQueryListener =
+    abstract BeginBatch : query:ProfiledCommand -> unit
+    abstract EndBatch : query:ProfiledCommand -> unit
     abstract BeginQuery : query:ProfiledCommand -> unit
     abstract EndQuery : query:ProfiledCommand * elapsed:TimeSpan -> unit
     abstract BeginRow : reader:ProfiledDataReader -> unit
@@ -60,6 +63,8 @@ type NullProfilingSessionListener() =
         member this.EnterScope(oldScope, newScope) = ()
         member this.LeaveScope(oldScope, newScope) = ()
     interface IProfilingSessionQueryListener with
+        member this.BeginBatch query = ()
+        member this.EndBatch query = ()
         member this.BeginQuery query = ()
         member this.EndQuery(query, elapsed) = ()
         member this.BeginRow reader = ()
@@ -69,9 +74,19 @@ type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListe
     let globalScope = new DbProfilingSessionScope("<global>", this, None)
     let mutable currentScope = globalScope
 
+    new() =
+        let nop = NullProfilingSessionListener()
+        DbProfilingSession(nop, nop)
+
+    new(queryListener) = DbProfilingSession(queryListener, NullProfilingSessionListener())
+
     member this.QueryCount = globalScope.QueryCount
     member this.RowCount = globalScope.RowCount
     member this.QueryTime = globalScope.QueryTime
+
+    member this.BeginBatch query = queryListener.BeginBatch query
+
+    member this.EndBatch query = queryListener.EndBatch query
 
     member this.BeginQuery query = 
         currentScope.Query()
@@ -88,10 +103,6 @@ type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListe
         queryListener.EndRow(reader, elapsed)
 
     member this.Scoped name action = currentScope.Scoped name action
-
-    new() =
-        let nop = NullProfilingSessionListener()
-        DbProfilingSession(nop, nop)
 
     interface IProfilingSessionScopeListener with 
         member this.EnterScope(oldScope, newScope) = 
