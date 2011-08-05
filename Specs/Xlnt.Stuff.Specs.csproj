@@ -51,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Data\SqlCmdSharpSpec.cs" />
     <Compile Include="LinqQueryRewriting.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
     <Reference Include="Cone, Version=0.0.2.24, Culture=neutral, processorArchitecture=MSIL">
@@ -90,7 +91,7 @@
     <Compile Include="Data\CsvReportTests.cs" />
     <Compile Include="Data\DataReaderBaseTests.cs" />
     <Compile Include="Data\DataReaderExtensionsTests.cs" />
-    <Compile Include="Data\DbProfilerSpec.cs" />
+    <Compile Include="Data\DbProfilingSpec.cs" />
     <Compile Include="Data\SqlBulkCopyFixture.cs" />
     <Compile Include="Data\SqlDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />

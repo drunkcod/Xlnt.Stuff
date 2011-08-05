@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
@@ -10,10 +11,10 @@ using Cone.Helpers;
 
 namespace Xlnt.Data
 {
-    [Describe(typeof(DbProfiler))]
-    public class DbProfilerSpec
+    [Describe(typeof(DbProfilingSession))]
+    public class DbProfilingSessionSpec
     {
-        static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilerSpec).Assembly.CodeBase).LocalPath); } }
+        static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilingSessionSpec).Assembly.CodeBase).LocalPath); } }
 
         static DbConnection OpenSampleConnection() {
             var connection = new SqlCeConnection(string.Format("DataSource={0}", Path.Combine(DataPath, "Sample.sdf")));
@@ -21,58 +22,69 @@ namespace Xlnt.Data
             return connection;
         }
 
+        public class TracingContext : ITestInterceptor
+        {
+            readonly List<IDisposable> garbage = new List<IDisposable>();
+            public TracingEventProfilingSessionQueryListener Trace;
+            public DbConnection Connection;
+            
+            public void Before() {
+                Trace = new TracingEventProfilingSessionQueryListener();
+                Connection = new DbProfilingSession(Trace).Connect(OpenSampleConnection());
+                garbage.Add(Connection);
+            }
+
+            public void After(ITestResult result) {
+                garbage.ForEach(x => x.Dispose());
+                garbage.Clear();
+            }
+
+            public DbDataReader ExecuteReader(string query) {
+                var q = Connection.CreateCommand();
+                q.CommandText = query;
+                var reader = q.ExecuteReader();
+                garbage.Add(reader);
+                return reader;
+            }
+        }
+
+        public TracingContext Context = new TracingContext();
+
+        TracingEventProfilingSessionQueryListener Trace { get { return Context.Trace; } }
+        DbDataReader ExecuteReader(string query) { return Context.ExecuteReader(query); }
+
         public void BatchStarted_when_executing_reader() {
-            var trace = new TracingEventProfilingSessionQueryListener();
-            var session = new DbProfilingSession(trace);
-            var db = DbProfiler.Connect(session, OpenSampleConnection());
-
             var batchStarted = new EventSpy<QueryEventArgs>();
-            trace.BeginBatch += batchStarted;
-
-            var query = db.CreateCommand();
-            query.CommandText = "select * from Numbers";
-            query.ExecuteReader();
+            Trace.BeginBatch += batchStarted;
+            ExecuteReader("select * from Numbers");
 
             Verify.That(() => batchStarted.HasBeenRaised);
         }
 
         public void batch_starts_before_query() {
-            var trace = new TracingEventProfilingSessionQueryListener();
-            var session = new DbProfilingSession(trace);
-            var db = DbProfiler.Connect(session, OpenSampleConnection());
-
             var batchStarted = new EventSpy<QueryEventArgs>();
             var queryStarted = new EventSpy<QueryEventArgs>();
-            trace.BeginBatch += batchStarted;
-            trace.BeginQuery += queryStarted;
-
-            var query = db.CreateCommand();
-            query.CommandText = "select * from Numbers";
-            query.ExecuteReader();
+            Trace.BeginBatch += batchStarted;
+            Trace.BeginQuery += queryStarted;
+            ExecuteReader("select * from Numbers");
 
             Verify.That(() => batchStarted.RaisedBefore(queryStarted));
         }
 
         public void EndBatch_when_reader_closed() {
-            var trace = new TracingEventProfilingSessionQueryListener();
-            var session = new DbProfilingSession(trace);
-            var db = DbProfiler.Connect(session, OpenSampleConnection());
-
             var batchEnded = new EventSpy<QueryEventArgs>();
-            trace.EndBatch += batchEnded;
-
-            var query = db.CreateCommand();
-            query.CommandText = "select * from Numbers";
-            
-            using(var reader = query.ExecuteReader())
-                Verify.That(() => !batchEnded.HasBeenRaised);
+            Trace.EndBatch += batchEnded;
+           
+            var reader = ExecuteReader("select * from Numbers");
+            Verify.That(() => !batchEnded.HasBeenRaised);
+            reader.Close();
             Verify.That(() => batchEnded.HasBeenRaised);
         }
 
         [DisplayAs("Ado.Net usage")]
         public void basic_usage() {
             var session = new DbProfilingSession();
-            var db = DbProfiler.Connect(session, OpenSampleConnection());
+            var db = session.Connect(OpenSampleConnection());
 
             var query = db.CreateCommand();
             query.CommandText = "select sum(value) from Numbers";
@@ -102,7 +114,7 @@ namespace Xlnt.Data
 
             public void compare_deferred_and_local_execution() {
                 var session = new DbProfilingSession();
-                var context = new DataContext(DbProfiler.Connect(session, OpenSampleConnection()));
+                var context = new DataContext(session.Connect(OpenSampleConnection()));
                 var numbers = context.GetTable<Number>(); 
 
                 var deffered = session.Scoped("Sent to database for execution", _ => {
@@ -135,7 +147,7 @@ namespace Xlnt.Data
 
                     var session = new DbProfilingSession(trace, rewrite);
                     using(var db = OpenSampleConnection()) {
-                        var context = new DataContext(DbProfiler.Connect(session, db));
+                        var context = new DataContext(session.Connect(db));
                         var numbers = context.GetTable<Number>(); 
                         var tableName = context.Mapping.GetTable(typeof(Number)).TableName;
                         session.Scoped("#nolock;" + tableName, scope => {

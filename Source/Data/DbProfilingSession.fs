@@ -2,6 +2,7 @@
 
 open System
 open System.Collections.Generic
+open System.Diagnostics
 open System.Diagnostics.CodeAnalysis
 
 [<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
@@ -44,7 +45,6 @@ type DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, oute
         [<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
         member this.Dispose() = 
             this.Leave()
-            GC.SuppressFinalize(this)
 
 and IProfilingSessionScopeListener = 
     abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
@@ -103,6 +103,22 @@ type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListe
         queryListener.EndRow(reader, elapsed)
 
     member this.Scoped name action = currentScope.Scoped name action
+
+    member this.Connect db =
+        let db' = new ProfiledConnection(db)
+        db'.CommandCreated.Add(fun command ->
+            command.BeginQuery.Add(fun e -> 
+                this.BeginBatch(e)
+                this.BeginQuery(e))
+            command.EndQuery.Add(fun (e, elapsed) -> this.EndQuery(e, elapsed))
+            command.ReaderCreated.Add(fun reader -> 
+                let batchTimer = Stopwatch.StartNew()
+                reader.BeginRow.Add(this.BeginRow)
+                reader.EndRow.Add(this.EndRow)
+                reader.Closed.Add(fun _ -> 
+                    batchTimer.Stop()
+                    this.EndBatch(command, batchTimer.Elapsed))))
+        db'
 
     interface IProfilingSessionScopeListener with 
         member this.EnterScope(oldScope, newScope) = 

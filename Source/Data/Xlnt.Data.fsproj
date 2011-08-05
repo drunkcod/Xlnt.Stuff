@@ -40,10 +40,10 @@
     <Compile Include="ProfiledCommand.fs" />
     <Compile Include="ProfiledConnection.fs" />
     <Compile Include="DbProfilingSession.fs" />
-    <Compile Include="DbProfiler.fs" />
     <Compile Include="DbConnection.fs" />
     <Compile Include="LinqQueryRewritingSession.fs" />
     <Compile Include="TracingEventProfilingSessionQueryListener.fs" />
+    <Compile Include="SqlCmdSharp.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
