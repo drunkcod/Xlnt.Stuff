@@ -1,5 +1,4 @@
-﻿// Learn more about F# at http://fsharp.net
-namespace SqlCmdSharp.Console
+﻿namespace SqlCmdSharp.Console
 
 open System
 open System.Text;
@@ -8,20 +7,19 @@ open System.Data.SqlClient
 open Xlnt.Data
 
 module Program =
-
     type ConnectionType =
         | Trusted
         | UserPass of string * string
 
     let withUser user = function
-        | None | Some(Trusted) -> Some(UserPass(user, String.Empty))
-        | Some(UserPass(_, password)) -> Some(UserPass(user, password))
+        | Some(UserPass(_, password)) -> UserPass(user, password)
+        | _ -> UserPass(user, String.Empty)
 
     let withPassword password = function
-        | None | Some(Trusted) -> Some(UserPass(String.Empty, password))
-        | Some(UserPass(user, _)) -> Some(UserPass(user, password))
+        | Some(UserPass(user, _)) -> UserPass(user, password)
+        | _ -> UserPass(String.Empty, password)
 
-    type InputSource =
+    type Action =
         | QueryAndExit of string
         | InputFile of string
 
@@ -29,7 +27,7 @@ module Program =
         Server : string option
         Database : string option 
         Connection : ConnectionType option 
-        Input : InputSource option }
+        Action : Action option }
     with 
         member this.ConnectionString =
             let builder = SqlConnectionStringBuilder()
@@ -42,36 +40,38 @@ module Program =
                 builder.UserID <- user
                 builder.Password <- password)
             builder.ConnectionString
-
-    let parseOptions args =
-        let rec loop opt = function
-            | [] -> opt
-            | "-S"::server::xs -> loop {opt with Server = Some(server) } xs
-            | "-d"::database::xs -> loop {opt with Database = Some(database) } xs
-            | "-E"::xs -> loop { opt with Connection = Some(Trusted) } xs
-            | "-U"::username::xs -> loop { opt with Connection = opt.Connection |> withUser username } xs
-            | "-P"::password::xs -> loop { opt with Connection = opt.Connection |> withPassword password } xs
-            | "-Q"::query::xs -> loop { opt with Input = Some(QueryAndExit(query)) } xs
-            | "-i"::inputfile::xs -> loop { opt with Input = Some(InputFile(inputfile)) } xs
-            | _ -> raise(NotSupportedException())
-        loop { Server = None; Database = None; Connection = None; Input = None } args
+        static member Parse args =
+            let parseArg(opt, xs)= 
+                match xs with 
+                | "-S"::server::xs -> ({opt with Server = Some(server) }, xs)
+                | "-d"::database::xs -> ({opt with Database = Some(database) }, xs)
+                | "-E"::xs -> ({ opt with Connection = Some(Trusted) }, xs)
+                | "-U"::username::xs -> ({ opt with Connection = Some(opt.Connection |> withUser username) }, xs)
+                | "-P"::password::xs -> ({ opt with Connection = Some(opt.Connection |> withPassword password) }, xs)
+                | "-Q"::query::xs -> ({ opt with Action = Some(QueryAndExit(query)) }, xs)
+                | "-i"::inputfile::xs -> ({ opt with Action = Some(InputFile(inputfile)) }, xs)
+                | _ -> raise(NotSupportedException())
+            let rec loop = function
+                | (x, []) -> x
+                | x -> parseArg x |> loop 
+            loop({ Server = None; Database = None; Connection = None; Action = None }, args)
 
     [<EntryPoint>]
     let main(args) =
-        let options = parseOptions (args |> Array.toList)
+        let options = ProgramOptions.Parse (args |> Array.toList)
         use db = new SqlConnection(options.ConnectionString)
-        db.Open()
-        options.Input |> Option.iter (function
-        | QueryAndExit(command) -> 
+        let executeNonQuery query =
             use cmd = db.CreateCommand()
-            cmd.CommandText <- command
+            cmd.CommandText <- query
             cmd.ExecuteNonQuery() |> ignore
-        | InputFile(path) ->
-            use reader = new StreamReader(path, Encoding.Default)
-            SqlCmdSharp.readQueryBatches reader (fun batch -> 
-                use cmd = db.CreateCommand()
-                cmd.CommandText <- batch
-                cmd.ExecuteNonQuery() |> ignore)
-        | _ -> ())
-
-        0
+        try 
+            db.Open()
+            options.Action |> Option.iter (function
+            | QueryAndExit(command) -> executeNonQuery command
+            | InputFile(path) ->
+                use reader = new StreamReader(path, Encoding.Default)
+                SqlCmdSharp.readQueryBatches reader executeNonQuery)
+            0
+        with e ->
+            -1
+        
