@@ -20,6 +20,7 @@ module Program =
         | _ -> UserPass(String.Empty, password)
 
     type Action =
+        | ShowHelp
         | QueryAndExit of string
         | InputFile of string
 
@@ -27,7 +28,7 @@ module Program =
         Server : string option
         Database : string option 
         Connection : ConnectionType option 
-        Action : Action option }
+        Action : Action }
     with 
         member this.ConnectionString =
             let builder = SqlConnectionStringBuilder()
@@ -48,30 +49,39 @@ module Program =
                 | "-E"::xs -> ({ opt with Connection = Some(Trusted) }, xs)
                 | "-U"::username::xs -> ({ opt with Connection = Some(opt.Connection |> withUser username) }, xs)
                 | "-P"::password::xs -> ({ opt with Connection = Some(opt.Connection |> withPassword password) }, xs)
-                | "-Q"::query::xs -> ({ opt with Action = Some(QueryAndExit(query)) }, xs)
-                | "-i"::inputfile::xs -> ({ opt with Action = Some(InputFile(inputfile)) }, xs)
+                | "-Q"::query::xs -> ({ opt with Action = QueryAndExit(query) }, xs)
+                | "-i"::inputfile::xs -> ({ opt with Action = InputFile(inputfile) }, xs)
                 | _ -> raise(NotSupportedException())
             let rec loop = function
                 | (x, []) -> x
                 | x -> parseArg x |> loop 
-            loop({ Server = None; Database = None; Connection = None; Action = None }, args)
+            loop({ Server = None; Database = None; Connection = None; Action = ShowHelp }, args)
 
     [<EntryPoint>]
     let main(args) =
         let options = ProgramOptions.Parse (args |> Array.toList)
-        use db = new SqlConnection(options.ConnectionString)
-        let executeNonQuery query =
-            use cmd = db.CreateCommand()
-            cmd.CommandText <- query
-            cmd.ExecuteNonQuery() |> ignore
-        try 
-            db.Open()
-            options.Action |> Option.iter (function
-            | QueryAndExit(command) -> executeNonQuery command
-            | InputFile(path) ->
-                use reader = new StreamReader(path, Encoding.Default)
-                SqlCmdSharp.readQueryBatches reader executeNonQuery)
+        if options.Action = ShowHelp then
+            Console.WriteLine(@"SqlCmd#
+  [-S server           ] [-E trusted connection        ] 
+  [-d use database name] [-Q ""cmdline query"" and exit  ]
+  [-U username         ] [-P password                  ]
+  [-i inputfile]")
             0
-        with e ->
-            -1
+        else
+            use db = new SqlConnection(options.ConnectionString)
+            let executeNonQuery query =
+                use cmd = db.CreateCommand()
+                cmd.CommandText <- query
+                cmd.ExecuteNonQuery() |> ignore
+            try
+                db.Open()
+                match options.Action with
+                | QueryAndExit(command) -> executeNonQuery command
+                | InputFile(path) ->
+                    use reader = new StreamReader(path, Encoding.Default)
+                    SqlCmdSharp.readQueryBatches reader executeNonQuery
+                | _ -> ()
+                0
+            with e -> -1
+
         
