@@ -44,6 +44,10 @@
     <Compile Include="LinqQueryRewritingSession.fs" />
     <Compile Include="TracingEventProfilingSessionQueryListener.fs" />
     <Compile Include="SqlCmdSharp.fs" />
+    <Compile Include="SqlFileStorage.fs" />
+    <EmbeddedResource Include="SqlFileStorage.Tables.sql" />
+    <EmbeddedResource Include="SqlFileStorage.InsertFile.sql" />
+    <EmbeddedResource Include="SqlFileStorage.Compact.sql" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
