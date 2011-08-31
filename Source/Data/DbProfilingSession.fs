@@ -5,7 +5,7 @@ open System.Collections.Generic
 open System.Diagnostics
 open System.Diagnostics.CodeAnalysis
 
-[<SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
+[<AutoSerializable(false);SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>]
 type DbProfilingSessionScope(name, listener:IProfilingSessionScopeListener, outerScope) =
     let mutable queryCount = 0
     let mutable queryTime = TimeSpan.Zero

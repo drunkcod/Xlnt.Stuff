@@ -6,8 +6,8 @@ namespace Xlnt.Data
 {
     public class CsvRecordReader : IDisposable
     {
-        const int MaxFieldLength = 1024;
-        const int MinChunkSize = 256;
+        const int MaxFieldLength = 4096;
+        const int MinChunkSize = MaxFieldLength;
 
         readonly TextReader reader;
         readonly char separator;

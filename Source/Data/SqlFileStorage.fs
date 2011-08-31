@@ -7,15 +7,6 @@ open System.Data.SqlClient
 open System.Resources
 open System.IO
 
-[<AutoOpen>]
-module Extensions =
-    type System.Data.IDbCommand with
-        member this.AddParameter(name, value) =
-            let parameter = this.CreateParameter()
-            parameter.ParameterName <- name
-            parameter.Value <- value
-            this.Parameters.Add(parameter)
-
 type SqlFileStorage(connectionProvider : unit -> IDbConnection) =
     member this.ResourceQuery name f =
         use db = connectionProvider()
