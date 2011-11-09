@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Xlnt.Web</RootNamespace>
     <AssemblyName>Xlnt.Web</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <OutputPath>$(SolutionDir)\Build</OutputPath>
     <IntermediateOutputPath>$(OutputPath)\obj\$(MSBuildProjectName)</IntermediateOutputPath>
@@ -54,6 +54,7 @@
     <Compile Include="Mvc\XmlModelBinder.cs" />
     <Compile Include="Mvc\XmlResult.cs" />
     <Compile Include="Mvc\XmlServiceAttribute.cs" />
+    <Compile Include="SimpleAspNetHost.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
