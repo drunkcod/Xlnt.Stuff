@@ -45,24 +45,24 @@ type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListe
 
     interface IProfilingSessionQueryListener with
         member this.BeginBatch query =
-            beginBatch.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
             inner.BeginBatch query
+            beginBatch.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
 
         member this.EndBatch(query, elapsed)=
             inner.EndBatch(query, elapsed)
             endBatch.Trigger(this, QueryEventArgs(query, elapsed))
 
         member this.BeginQuery query =
-            beginQuery.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
             inner.BeginQuery query
+            beginQuery.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
 
         member this.EndQuery(query, elapsed) = 
             inner.EndQuery(query, elapsed)
             endQuery.Trigger(this, QueryEventArgs(query, elapsed))
     
         member this.BeginRow reader = 
-            beginRow.Trigger(this, RowEventArgs(reader, TimeSpan.Zero))
             inner.BeginRow reader
+            beginRow.Trigger(this, RowEventArgs(reader, TimeSpan.Zero))
         
         member this.EndRow(reader, elapsed) = 
             inner.EndRow(reader, elapsed)

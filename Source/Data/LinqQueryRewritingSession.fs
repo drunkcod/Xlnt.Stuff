@@ -12,6 +12,7 @@ type LinqQueryRewritingSession() =
 
     let nolock = Stack()
     let mutable nolockCache = HashSet()
+    let mutable nolockAll = false
 
     let isNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
 
@@ -37,7 +38,8 @@ type LinqQueryRewritingSession() =
 
     let updateCache f = 
         let r = f nolock
-        nolockCache <- HashSet(nolock |> (Seq.collect << Seq.map) unescapeName)
+        let tables = nolock |> (Seq.collect << Seq.map) unescapeName
+        nolockCache <- HashSet(tables)
         r
 
     member this.PushNoLockScope ([<ParamArray>] scope) = updateCache (fun x -> x.Push(scope)) 
