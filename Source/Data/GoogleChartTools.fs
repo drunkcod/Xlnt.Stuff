@@ -7,7 +7,7 @@ open System.Runtime.Serialization
 
 [<DataContract>]
 type GoogleChartColumn =
-    struct 
+    struct    
         [<DataMember(Name="label")>] val mutable Label : string 
         [<DataMember(Name="type")>] val mutable Type : string
 
