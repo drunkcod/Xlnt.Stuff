@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Xlnt</RootNamespace>
     <AssemblyName>Xlnt.Stuff.Specs</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IntermediateOutputPath>..\Build\$(MSBuildProjectName)</IntermediateOutputPath>
     <OutputPath>..\Build</OutputPath>
