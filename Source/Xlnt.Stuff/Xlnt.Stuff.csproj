@@ -66,7 +66,7 @@
     <Compile Include="Data\FieldCollection.cs" />
     <Compile Include="Data\IDataReaderExtensions.cs" />
     <Compile Include="Data\IEnumerableExtensions.cs" />
-    <Compile Include="IEnumerableExtensions.cs" />
+    <Compile Include="CollectionExtensions.cs" />
     <Compile Include="ILGeneratorExtensions.cs" />
     <Compile Include="IO\ILineReader.cs" />
     <Compile Include="IO\LineReader.cs" />

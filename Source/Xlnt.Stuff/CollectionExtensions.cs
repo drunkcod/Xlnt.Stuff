@@ -21,9 +21,13 @@ namespace Xlnt.Stuff
             return false;
         }
 
-        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> process){
+        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action){
             foreach(var item in collection)
-                process(item);
+                action(item);
+        }
+
+        public static void ForEach<T>(this T[] array, Action<T> action) {
+            Array.ForEach(array, action);
         }
     }
 }
