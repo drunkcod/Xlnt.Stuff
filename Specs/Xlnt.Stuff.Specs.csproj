@@ -82,9 +82,6 @@
     <Reference Include="System.Web.Mvc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
-    <Compile Include="..\Source\NUnit\Scenario.cs">
-      <Link>Scenario.cs</Link>
-    </Compile>
     <Compile Include="Data\CollectionDataReaderTests.cs" />
     <Compile Include="Data\CsvBulkCopyTests.cs" />
     <Compile Include="Data\CsvDataReaderTests.cs" />
@@ -96,27 +93,28 @@
     <Compile Include="Data\SqlDataReaderTests.cs" />
     <Compile Include="IEnumerableExtensionsTests.cs" />
     <Compile Include="LambdasTests.cs" />
-    <Compile Include="NUnitScenarioTests.cs" />
     <Compile Include="TypeExtensionsTests.cs" />
     <Compile Include="Web\Mvc\BasicControllerFactoryTests.cs" />
     <Compile Include="Web\Mvc\MissingControllerTests.cs" />
-    <ProjectReference Include="..\Source\Data\Xlnt.Data.fsproj">
-      <Project>{FD54C5FB-0704-4474-A94A-1AF1A5A6C3D5}</Project>
-      <Name>Xlnt.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Source\Web\Xlnt.Web.csproj">
-      <Project>{F8901B87-E944-4901-B8F7-44EE26F3D7D2}</Project>
-      <Name>Xlnt.Web</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Source\Xlnt.Stuff.csproj">
-      <Project>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</Project>
-      <Name>Xlnt.Stuff</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sample.sdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Source\Xlnt.Data\Xlnt.Data.fsproj">
+      <Project>{FD54C5FB-0704-4474-A94A-1AF1A5A6C3D5}</Project>
+      <Name>Xlnt.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\Xlnt.Stuff\Xlnt.Stuff.csproj">
+      <Project>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</Project>
+      <Name>Xlnt.Stuff</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\Xlnt.Web\Xlnt.Web.csproj">
+      <Project>{F8901B87-E944-4901-B8F7-44EE26F3D7D2}</Project>
+      <Name>Xlnt.Web</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

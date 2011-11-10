@@ -140,7 +140,6 @@ namespace Xlnt.Web
                 Body = body
             };
             HttpRuntime.ProcessRequest(worker);
-            worker.EndOfRequest();
             return worker.Response;
         }
     }}

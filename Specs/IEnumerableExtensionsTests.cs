@@ -1,20 +1,16 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
-using Xlnt.NUnit;
+using Cone;
 
 namespace Xlnt.Stuff.Tests
 {
-    [TestFixture]
-    public class IEnumerableExtensionsTests : ScenarioFixture
+    [Describe(typeof(IEnumerableExtensions))]
+    public class IEnumerableExtensionsTests
     {
-        public Scenario Extensions() {
-            return new Scenario()
-                .Given("a sample sequence [1,2,3]", () => new[] { 1, 2, 3 })
-                .Then("ForEach enumerates all values", items => {
-                    var target = new List<int>();
-                    items.ForEach(target.Add);
-                    Assert.That(target, Is.EqualTo(items));
-                });
+        public void ForEach_enumerates_all_values() {
+            var items = new List<int>();
+            (new[]{ 1, 2, 3 }).ForEach(items.Add);
+            Verify.That(() => items[0] == 1 && items[1] == 2 && items[3] == 3);
+
         }
     }
 }

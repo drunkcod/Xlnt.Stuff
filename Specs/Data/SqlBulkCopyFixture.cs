@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using NUnit.Framework;
 
 namespace Xlnt.Data

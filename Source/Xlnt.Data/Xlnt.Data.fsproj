@@ -12,7 +12,7 @@
     <DocumentationFile>$(OutputPath)\Xlnt.Data.XML</DocumentationFile>
     <RootNamespace>Xlnt.Data</RootNamespace>
     <AssemblyName>Xlnt.Data</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Xlnt.Data</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -59,6 +59,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Transactions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xlnt.Stuff\Xlnt.Stuff.csproj">
+      <Name>Xlnt.Stuff</Name>
+      <Project>{a8d3d301-5d52-436e-8ca2-05909d8e1e4a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

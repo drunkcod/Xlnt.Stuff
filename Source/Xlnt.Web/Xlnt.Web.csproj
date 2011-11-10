@@ -34,18 +34,11 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Mvc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Web.Routing" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Xlnt.Stuff.csproj">
-      <Project>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</Project>
-      <Name>Xlnt.Stuff</Name>
-    </ProjectReference>
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mvc\BasicControllerFactory.cs" />
@@ -55,6 +48,12 @@
     <Compile Include="Mvc\XmlResult.cs" />
     <Compile Include="Mvc\XmlServiceAttribute.cs" />
     <Compile Include="SimpleAspNetHost.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xlnt.Stuff\Xlnt.Stuff.csproj">
+      <Project>{A8D3D301-5D52-436E-8CA2-05909D8E1E4A}</Project>
+      <Name>Xlnt.Stuff</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
