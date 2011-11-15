@@ -47,7 +47,7 @@ namespace Xlnt.Web.Mvc
         void Index(int id) { }
         void Foo(int id, string extra) { }
 
-        UrlHelper UrlHelperFor(string controller) {
+        IUrlFactory UrlHelperFor(string controller) {
             var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
             httpContext.SetupGet(x => x.Request).Returns(() => {
                 var request = new Mock<HttpRequestBase>(MockBehavior.Strict);
@@ -63,7 +63,7 @@ namespace Xlnt.Web.Mvc
             });
             var routeData = new RouteData();
             routeData.Values.Add("controller", controller);
-            return new UrlHelper(new RequestContext(httpContext.Object, routeData), RouteTable);
+            return new UrlHelper(new RequestContext(httpContext.Object, routeData), RouteTable).AsUrlFactory();
         }
     }
 }

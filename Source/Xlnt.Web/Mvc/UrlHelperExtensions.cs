@@ -7,14 +7,37 @@ using System.Web.Routing;
 
 namespace Xlnt.Web.Mvc
 {
+    public interface IUrlFactory 
+    {
+        string Absolute(string relPath);
+        string Action(string method, object routeValues);
+    }
+
     public static class UrlHelperExtensions
     {
-        public static string Absolute(this UrlHelper self, string url) {
-            //this is a complete train-wreck.. somewhere demeter is crying.
-            return self.RequestContext.HttpContext.Request.Url.GetLeftPart(UriPartial.Authority) + url;
+        class UrlHelperUrlFactory : IUrlFactory
+        {
+            readonly UrlHelper url;
+
+            public UrlHelperUrlFactory(UrlHelper url) {
+                this.url = url;
+            }
+
+            public string Absolute(string relPath) {
+                //this is a complete train-wreck.. somewhere demeter is crying.
+                return url.RequestContext.HttpContext.Request.Url.GetLeftPart(UriPartial.Authority) + relPath;
+            }
+    
+            public string Action(string method, object routeValues) {
+                return url.Action(method, routeValues);
+            }
         }
 
-        public static string Action(this UrlHelper self, Expression<Action> expr) {
+        public static IUrlFactory AsUrlFactory(this UrlHelper self) {
+            return new UrlHelperUrlFactory(self); 
+        }
+
+        public static string Action(this IUrlFactory self, Expression<Action> expr) {
             var body = (MethodCallExpression)expr.Body;
             var method = body.Method;
             return self.Action(method.Name, GetRouteValues(method.GetParameters(), body.Arguments));
