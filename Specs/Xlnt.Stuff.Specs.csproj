@@ -54,6 +54,7 @@
     <Compile Include="Data\SqlCmdSharpSpec.cs" />
     <Compile Include="LinqQueryRewriting.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
+    <Compile Include="Web\Mvc\XmlResultSpec.cs" />
     <Reference Include="Cone, Version=0.0.2.24, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Tools\NUnit-2.5.10.11092\bin\net-2.0\addins\Cone.dll</HintPath>

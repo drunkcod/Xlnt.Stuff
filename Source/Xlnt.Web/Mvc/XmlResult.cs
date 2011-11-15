@@ -9,6 +9,15 @@ namespace Xlnt.Web.Mvc
 {
     public class XmlResult : ActionResult
     {
+        class NoBomUTF8Encoding : UTF8Encoding
+        {
+            public override byte[] GetPreamble() {
+                return new byte[0];
+            }
+        }
+
+        static Encoding DefaultEncoding = new NoBomUTF8Encoding();
+
         static readonly string[] SupportedContentTypes = new[]{ "text/xml", "application/xml" };
 
         public static bool SupportsContentType(string contentType)
@@ -21,19 +30,25 @@ namespace Xlnt.Web.Mvc
 
         object value;
 
-        public XmlResult(object value) { this.value = value; }
+        public XmlResult(object value) { 
+            this.value = value; 
+        }
 
         public override void ExecuteResult(ControllerContext context) {
             var response = context.HttpContext.Response;
             response.ContentType = SupportedContentTypes[0];
-            response.ContentEncoding = Encoding.UTF8;
+            response.ContentEncoding = DefaultEncoding;
+            Serialize(response.OutputStream, value);
+        }
 
+        public static void Serialize(Stream stream, object value) {
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
             var serializer = new XmlSerializer(value.GetType(), "");
-            using (var xml = XmlWriter.Create(response.OutputStream, new XmlWriterSettings {
+            using (var xml = XmlWriter.Create(stream, new XmlWriterSettings {
                 Indent = true,
-                CloseOutput = true
+                CloseOutput = true,
+                Encoding = DefaultEncoding
             }))
                 serializer.Serialize(xml, value, ns);
         }

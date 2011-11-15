@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace Xlnt.Data
@@ -57,9 +56,7 @@ namespace Xlnt.Data
 
         #region IDataRecord Members
 
-        bool IDataRecord.GetBoolean(int i) {
-            throw new NotImplementedException();
-        }
+        bool IDataRecord.GetBoolean(int i) { return Convert.ToBoolean(GetValue(i)); }
 
         byte IDataRecord.GetByte(int i) {
             throw new NotImplementedException();

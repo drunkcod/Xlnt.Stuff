@@ -8,16 +8,40 @@ using System.Xml;
 using System.Xml.Serialization;
 using Xlnt.Stuff;
 using HeaderValue = System.Collections.Generic.KeyValuePair<string, string>;
+using Xlnt.Web.Mvc;
+using System.Net;
 
 namespace Xlnt.Web
 {
+    static class HttpHeaders
+    {
+        public const string ContentType = "Content-Type";
+        public const string ContentLength = "Content-Length";
+        public const string Location = "Location";
+    }
+
     [Serializable]
     public class SimpleAspNetHostResult
     {
         public int StatusCode;
         public string StatusDescription;
-        public IDictionary<string,string> Headers = new Dictionary<string, string>();
+        
+        public string ContentType { get { return Headers[HttpHeaders.ContentType]; } }
+        public string Location { get { return Headers[HttpHeaders.Location]; } }
+
+        public IDictionary<string,string> Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         public string Body;
+
+        public T BodyAs<T>() {
+            if(ContentType.StartsWith("text/xml")) {
+                using(var reader = new StringReader(Body)) {
+                    var serializer = new XmlSerializer(typeof(T), "");
+                    return (T)serializer.Deserialize(reader);
+                }
+            }
+
+            throw new NotSupportedException(string.Format("Unsupported {0}: {1}", HttpHeaders.ContentType, ContentType));
+        }
 
         public override string ToString() {
             var result = new StringBuilder();
@@ -31,7 +55,7 @@ namespace Xlnt.Web
     {
         public override void EndOfRequest() {
             FlushResponse(true);
-            Response.Body = responseBody.GetStringBuilder().ToString();
+            Response.Body = Encoding.UTF8.GetString(responseBody.ToArray());
         }
 
         public SimpleAspNetHostResult Response = new SimpleAspNetHostResult();
@@ -41,7 +65,7 @@ namespace Xlnt.Web
         public string QueryString;
         public byte[] Body;
         public IDictionary<string,string> Headers;
-        readonly StringWriter responseBody = new StringWriter();
+        readonly MemoryStream responseBody = new MemoryStream();
 
         public override void FlushResponse(bool finalFlush) {
             responseBody.Flush();
@@ -56,11 +80,11 @@ namespace Xlnt.Web
         }
 
         public override string GetLocalAddress() {
-            throw new NotImplementedException();
+            return IPAddress.Loopback.ToString();
         }
 
         public override int GetLocalPort() {
-            throw new NotImplementedException();
+            return 80;
         }
 
         public override string GetQueryString() {
@@ -86,7 +110,7 @@ namespace Xlnt.Web
         }
 
         public override void SendKnownResponseHeader(int index, string value) {
-            SendUnknownResponseHeader(GetKnownRequestHeaderName(index), value);
+            SendUnknownResponseHeader(GetKnownResponseHeaderName(index), value);
         }
 
         public override void SendUnknownResponseHeader(string name, string value) {
@@ -102,7 +126,7 @@ namespace Xlnt.Web
         }
 
         public override void SendResponseFromMemory(byte[] data, int length) {
-            responseBody.Write(Encoding.UTF8.GetString(data, 0, length));
+            responseBody.Write(data, 0, length);
         }
 
         public override void SendStatus(int statusCode, string statusDescription) {
@@ -225,8 +249,8 @@ namespace Xlnt.Web
 
         static SimpleAspNetHostResult ProcessMessage(SimpleAspNetHost self, string method, string url, SimpleMessage body) {
             return self.ProcessRequest(method, url, new[] {
-                new HeaderValue("Content-Type", body.ContentType),
-                new HeaderValue("Content-Length", body.Data.Length.ToString())
+                new HeaderValue(HttpHeaders.ContentType, body.ContentType),
+                new HeaderValue(HttpHeaders.ContentLength, body.Data.Length.ToString())
             }, body.Data);
         }
 
