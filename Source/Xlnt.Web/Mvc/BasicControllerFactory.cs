@@ -46,5 +46,10 @@ namespace Xlnt.Web.Mvc
             if(disposable != null)
                 disposable.Dispose();
         }
+
+
+        public System.Web.SessionState.SessionStateBehavior GetControllerSessionBehavior(RequestContext requestContext, string controllerName) {
+            throw new NotImplementedException();
+        }
     }
 }
