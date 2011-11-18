@@ -58,6 +58,13 @@ namespace Xlnt.Web.Mvc
 
             switch(expr.NodeType) {
                 case ExpressionType.Constant: return (expr as ConstantExpression).Value;
+                case ExpressionType.Call: 
+                    var callExpression = expr as MethodCallExpression;
+                    var target = Value(callExpression.Object);
+                    var parameters = new object[callExpression.Arguments.Count];
+                    for(var i = 0; i != parameters.Length; ++i)
+                        parameters[i] = Value(callExpression.Arguments[i]);
+                    return callExpression.Method.Invoke(target, parameters);
                 case ExpressionType.MemberAccess:
                     var memberExpression = expr as MemberExpression;
                     var source = Value(memberExpression.Expression);
