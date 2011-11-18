@@ -4,6 +4,7 @@ using System.Text;
 using System.Web.Mvc;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Net.Mime;
 
 namespace Xlnt.Web.Mvc
 {
@@ -24,16 +25,15 @@ namespace Xlnt.Web.Mvc
 
         static readonly string[] SupportedContentTypes = new[]{ "text/xml", "application/xml" };
 
-        public static bool SupportsContentType(string contentType)
+        public static bool SupportsContentType(ContentType contentType)
         {
-            var mimeType = contentType.Split(';')[0];
             for(int i = 0; i != SupportedContentTypes.Length; ++i)
-                if(SupportedContentTypes[i].Equals(mimeType))
+                if(SupportedContentTypes[i].Equals(contentType.MediaType))
                     return true;
             return false;
         }
 
-        object value;
+        readonly object value;
 
         public XmlResult(object value) { 
             this.value = value; 

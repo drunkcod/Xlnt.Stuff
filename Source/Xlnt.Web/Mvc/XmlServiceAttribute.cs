@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Web.Mvc;
 
 namespace Xlnt.Web.Mvc
@@ -19,7 +20,7 @@ namespace Xlnt.Web.Mvc
         static bool UnsupportedAcceptType(IEnumerable<string> acceptTypes) {
             if (acceptTypes == null)
                 return true;
-            return !acceptTypes.Any(item => XmlResult.SupportsContentType(item));
+            return !acceptTypes.Any(item => XmlResult.SupportsContentType(new ContentType(item)));
         }
     }
 }

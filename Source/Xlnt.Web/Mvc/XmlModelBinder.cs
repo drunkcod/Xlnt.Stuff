@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Web;
 using System.Web.Mvc;
+using System.Net.Mime;
 
 namespace Xlnt.Web.Mvc
 {
@@ -11,8 +12,9 @@ namespace Xlnt.Web.Mvc
         }
 
         public IModelBinder GetBinder(Type modelType) {
-            var request = HttpContext.Current.Request;
-            if (XmlResult.SupportsContentType(request.ContentType))
+            var contentType = HttpContext.Current.Request.ContentType;
+            
+            if(!string.IsNullOrEmpty(contentType) && XmlResult.SupportsContentType(new ContentType(contentType)))
                 return this;
             return null;
         }
