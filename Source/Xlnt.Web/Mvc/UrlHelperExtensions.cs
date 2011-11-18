@@ -60,8 +60,13 @@ namespace Xlnt.Web.Mvc
                 case ExpressionType.Constant: return (expr as ConstantExpression).Value;
                 case ExpressionType.MemberAccess:
                     var memberExpression = expr as MemberExpression;
-                    var field = (FieldInfo)memberExpression.Member;
-                    return field.GetValue(Value(memberExpression.Expression));
+                    var source = Value(memberExpression.Expression);
+                    var member = memberExpression.Member;
+                    switch(member.MemberType) {
+                        case MemberTypes.Field: return (member as FieldInfo).GetValue(source);
+                        case MemberTypes.Property: return (member as PropertyInfo).GetValue(source, null);
+                    }
+                    goto default;
                 default: throw new NotSupportedException("Unsupported NodeType: {0} ({1})".Format(expr.NodeType, expr));
             }
         }

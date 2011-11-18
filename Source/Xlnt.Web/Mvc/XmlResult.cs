@@ -16,7 +16,11 @@ namespace Xlnt.Web.Mvc
             }
         }
 
-        static Encoding DefaultEncoding = new NoBomUTF8Encoding();
+        static XmlWriterSettings XmlWriterSettings = new XmlWriterSettings {
+            Indent = true,
+            CloseOutput = true,
+            Encoding = new NoBomUTF8Encoding()
+        };
 
         static readonly string[] SupportedContentTypes = new[]{ "text/xml", "application/xml" };
 
@@ -38,7 +42,7 @@ namespace Xlnt.Web.Mvc
         public override void ExecuteResult(ControllerContext context) {
             var response = context.HttpContext.Response;
             response.ContentType = SupportedContentTypes[0];
-            response.ContentEncoding = DefaultEncoding;
+            response.ContentEncoding = XmlWriterSettings.Encoding;
             Serialize(response.OutputStream, value);
         }
 
@@ -46,11 +50,7 @@ namespace Xlnt.Web.Mvc
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
             var serializer = new XmlSerializer(value.GetType(), "");
-            using (var xml = XmlWriter.Create(stream, new XmlWriterSettings {
-                Indent = true,
-                CloseOutput = true,
-                Encoding = DefaultEncoding
-            }))
+            using (var xml = XmlWriter.Create(stream, XmlWriterSettings))
                 serializer.Serialize(xml, value, ns);
         }
 
