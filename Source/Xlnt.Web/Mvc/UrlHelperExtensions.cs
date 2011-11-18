@@ -10,7 +10,7 @@ namespace Xlnt.Web.Mvc
     public interface IUrlFactory 
     {
         string Absolute(string relPath);
-        string Action(string method, object routeValues);
+        string Action(string method, RouteValueDictionary routeValues);
     }
 
     public static class UrlHelperExtensions
@@ -28,7 +28,7 @@ namespace Xlnt.Web.Mvc
                 return url.RequestContext.HttpContext.Request.Url.GetLeftPart(UriPartial.Authority) + relPath;
             }
     
-            public string Action(string method, object routeValues) {
+            public string Action(string method, RouteValueDictionary routeValues) {
                 return url.Action(method, routeValues);
             }
         }

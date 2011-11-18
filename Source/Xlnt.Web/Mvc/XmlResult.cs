@@ -22,8 +22,9 @@ namespace Xlnt.Web.Mvc
 
         public static bool SupportsContentType(string contentType)
         {
+            var mimeType = contentType.Split(';')[0];
             for(int i = 0; i != SupportedContentTypes.Length; ++i)
-                if(SupportedContentTypes[i].Equals(contentType))
+                if(SupportedContentTypes[i].Equals(mimeType))
                     return true;
             return false;
         }

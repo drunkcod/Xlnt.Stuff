@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Web;
 using System.Web.Hosting;
@@ -8,8 +9,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using Xlnt.Stuff;
 using HeaderValue = System.Collections.Generic.KeyValuePair<string, string>;
-using Xlnt.Web.Mvc;
-using System.Net;
 
 namespace Xlnt.Web
 {
@@ -206,27 +205,34 @@ namespace Xlnt.Web
         }
     }
 
-    public class SimpleMessage
+    public interface IMessageBuilder
     {
-        public readonly string ContentType;
-        public readonly byte[] Data;
+        IMessageBuilder XmlBody(object value);
+        IMessageBuilder TextBody(string value);
 
-        SimpleMessage(string contentType, byte[] data) {
-            this.ContentType = contentType;
-            this.Data = data;
+    }
+
+    class SimpleMessageBuilder : IMessageBuilder 
+    {
+        internal string ContentType;
+        internal byte[] Data;
+
+
+        public IMessageBuilder TextBody(string value) {
+            ContentType = "text/plain; charset=utf-8";
+            Data = Encoding.UTF8.GetBytes(value);
+            return this;
         }
 
-        public static SimpleMessage Text(string value) {
-            return new SimpleMessage("text/plain; charset=utf-8", Encoding.UTF8.GetBytes(value));
-        }
-
-        public static SimpleMessage Xml(object value) {
+        public IMessageBuilder XmlBody(object value) {
             var serializer = new XmlSerializer(value.GetType());
             var result = new MemoryStream();
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
             serializer.Serialize(XmlTextWriter.Create(result, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }), value, ns);
-            return new SimpleMessage("text/xml; charset=utf-8", result.ToArray());
+            ContentType = "text/xml; charset=utf-8";
+            Data = result.ToArray();
+            return this;
         }
     }
 
@@ -239,15 +245,17 @@ namespace Xlnt.Web
             return self.ProcessRequest("GET", url, NoHeaders, EmptyBody);
         }
 
-        public static SimpleAspNetHostResult Put(this SimpleAspNetHost self, string url, SimpleMessage body) {
-            return ProcessMessage(self, "PUT", url, body);
+        public static SimpleAspNetHostResult Put(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
+            return self.ProcessMessage("PUT", url, createBody);
         }
 
-        public static SimpleAspNetHostResult Post(this SimpleAspNetHost self, string url, SimpleMessage body) {
-            return ProcessMessage(self, "POST", url, body);
+        public static SimpleAspNetHostResult Post(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
+            return self.ProcessMessage("POST", url, createBody);
         }
 
-        static SimpleAspNetHostResult ProcessMessage(SimpleAspNetHost self, string method, string url, SimpleMessage body) {
+        static SimpleAspNetHostResult ProcessMessage(this SimpleAspNetHost self, string method, string url,  Action<IMessageBuilder> createBody) {
+            var body = new SimpleMessageBuilder();
+            createBody(body);
             return self.ProcessRequest(method, url, new[] {
                 new HeaderValue(HttpHeaders.ContentType, body.ContentType),
                 new HeaderValue(HttpHeaders.ContentLength, body.Data.Length.ToString())
