@@ -10,6 +10,13 @@ open System.Xml
 open System.Linq.Expressions
 open System.Reflection
 
+[<AutoOpen>]
+module Expressions =
+    let (|MemberAccess|_|) (x : Expression) = 
+        match x.NodeType with
+        | ExpressionType.MemberAccess -> Some(MemberAccess(x :?> MemberExpression))
+        | _ -> None 
+
 type XmlParameter(parameterName) =
     let [<Literal>] ParameterTagName = "p"
     let ParameterFormat = String.Format("<{0}>{{0}}</{0}>", ParameterTagName)
@@ -33,6 +40,9 @@ type XmlParameter(parameterName) =
         | null -> null
         | value -> value.ToString()
 
+    interface System.Collections.IEnumerable with
+        member this.GetEnumerator() = parameters.GetEnumerator() :> System.Collections.IEnumerator
+
     member this.Count = parameters.Count
 
     member this.Add(value:obj) = parameters.Add(value)
@@ -46,13 +56,11 @@ type XmlParameter(parameterName) =
             | _ -> raise(NotSupportedException("Unsupported column type: " + columnType.Name))
         String.Format("select [{0}] = x.value('.', '{4}') into {1} from {2}.nodes('/{3}') _(x)\n", columnName, tableName, parameterName, ParameterTagName, columnType)
 
-    member this.Inject(expr : Expression<Func<'a,'b>>, command) =      
-        if expr.Body.NodeType <> ExpressionType.MemberAccess 
-        then raise(NotSupportedException("invalid expression type"))
+    member this.Inject(expr : Expression<Func<'a,'b>>, command) =
+        match expr.Body with
+        | MemberAccess(x) -> this.Inject(this.GetTableName(x.Member.DeclaringType), this.GetColumnName(x.Member), expr.Body.Type, command)
+        | _ -> raise(NotSupportedException("invalid expression type"))
         
-        let memberAccess = expr.Body :?> MemberExpression
-        this.Inject(this.GetTableName(memberAccess.Member.DeclaringType), this.GetColumnName(memberAccess.Member), expr.Body.Type, command)
-
     member private this.GetTableName(x : Type) =
         getName <| getAttribute "System.Data.Linq.Mapping.TableAttribute" x
         |> function | null -> x.Name | name -> name
