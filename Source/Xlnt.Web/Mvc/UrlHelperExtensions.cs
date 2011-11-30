@@ -7,12 +7,6 @@ using System.Web.Routing;
 
 namespace Xlnt.Web.Mvc
 {
-    public interface IUrlFactory 
-    {
-        string Absolute(string relPath);
-        string Action(string method, RouteValueDictionary routeValues);
-    }
-
     public static class UrlHelperExtensions
     {
         class UrlHelperUrlFactory : IUrlFactory

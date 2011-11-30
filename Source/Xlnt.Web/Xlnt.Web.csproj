@@ -45,8 +45,10 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IUrlFactory.cs" />
     <Compile Include="Mvc\BasicControllerFactory.cs" />
     <Compile Include="Mvc\DataContractJsonResult.cs" />
+    <Compile Include="Mvc\HttpUnprocessableEntity.cs" />
     <Compile Include="Mvc\MissingController.cs" />
     <Compile Include="Mvc\UrlHelperExtensions.cs" />
     <Compile Include="Mvc\XmlModelBinder.cs" />
