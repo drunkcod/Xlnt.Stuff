@@ -11,16 +11,48 @@ open System.Linq.Expressions
 open System.Reflection
 
 [<AutoOpen>]
-module Expressions =
+module private Expressions =
     let (|MemberAccess|_|) (x : Expression) = 
         match x.NodeType with
         | ExpressionType.MemberAccess -> Some(MemberAccess(x :?> MemberExpression))
         | _ -> None 
 
+type private ParameterHolder<'a> =
+    | Empty
+    | ItemList of 'a List
+    | Sequence of 'a seq
+
+type ParameterCollection<'a>() =
+    let mutable holder = Empty
+    let toList xs = 
+        let x = List()
+        x.AddRange(xs)
+        holder <- ItemList(x)
+        x
+
+    member this.GetEnumerator() =
+        match holder with
+        | Empty -> Seq.empty.GetEnumerator()
+        | ItemList(xs) -> xs.GetEnumerator() :> IEnumerator<'a>
+        | Sequence(xs) -> xs.GetEnumerator()
+
+    member this.AddRange items =
+        match holder with
+        | Empty -> holder <- Sequence(items)        
+        | ItemList(xs) -> xs.AddRange(items)
+        | Sequence(xs) -> toList(xs).AddRange items
+
+    member this.Add item =
+        match holder with
+        | Empty -> holder <- Sequence([|item|])
+        | ItemList(xs) -> xs.Add(item)
+        | Sequence(xs) -> toList(xs).Add item
+
 type XmlParameter(parameterName) =
+
     let [<Literal>] ParameterTagName = "p"
     let ParameterFormat = String.Format("<{0}>{{0}}</{0}>", ParameterTagName)
-    let parameters = List()
+    let parameters = ParameterCollection()
 
     let getAttribute name (x : ICustomAttributeProvider) = 
         let attrs = x.GetCustomAttributes(true)
@@ -43,9 +75,8 @@ type XmlParameter(parameterName) =
     interface System.Collections.IEnumerable with
         member this.GetEnumerator() = parameters.GetEnumerator() :> System.Collections.IEnumerator
 
-    member this.Count = parameters.Count
-
     member this.Add(value:obj) = parameters.Add(value)
+    member this.AddRange(values) = parameters.AddRange(values)
 
     member this.TempTableDefinition(tableName, columnName, columnType) = 
         let columnType = 
@@ -70,8 +101,12 @@ type XmlParameter(parameterName) =
         |> function | null -> x.Name | name -> name
 
     member this.Inject(tableName : String, columnName : String, columnType : Type, command : IDbCommand) =
-        command.CommandText <- this.TempTableDefinition(tableName, columnName, columnType) + "\n" + command.CommandText
-        command.Parameters.Add(this.ToSqlParameter())
+        command.CommandText <- this.TempTableDefinition(tableName, columnName, columnType) + command.CommandText
+        let p = command.CreateParameter()
+        p.ParameterName <- parameterName
+        p.DbType <- DbType.Xml
+        p.Value <- this.GetValue()
+        command.Parameters.Add(p)
 
     member private this.GetValue() = 
         let result = StringBuilder()
