@@ -58,7 +58,7 @@ namespace Xlnt.Data
             Trace.BeginBatch += batchStarted;
             ExecuteReader("select * from Numbers");
 
-            Verify.That(() => batchStarted.HasBeenRaised);
+            Verify.That(() => batchStarted.HasBeenCalled);
         }
 
         public void batch_starts_before_query() {
@@ -68,7 +68,7 @@ namespace Xlnt.Data
             Trace.BeginQuery += queryStarted;
             ExecuteReader("select * from Numbers");
 
-            Verify.That(() => batchStarted.RaisedBefore(queryStarted));
+            Verify.That(() => batchStarted.CalledBefore(queryStarted));
         }
 
         public void EndBatch_when_reader_closed() {
@@ -76,9 +76,9 @@ namespace Xlnt.Data
             Trace.EndBatch += batchEnded;
            
             var reader = ExecuteReader("select * from Numbers");
-            Verify.That(() => !batchEnded.HasBeenRaised);
+            Verify.That(() => !batchEnded.HasBeenCalled);
             reader.Close();
-            Verify.That(() => batchEnded.HasBeenRaised);
+            Verify.That(() => batchEnded.HasBeenCalled);
         }
 
         [DisplayAs("Ado.Net usage")]

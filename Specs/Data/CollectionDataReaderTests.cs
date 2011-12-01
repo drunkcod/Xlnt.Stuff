@@ -59,6 +59,8 @@ namespace Xlnt.Data
             public void MapAll() 
             {
                 DataReader = new[] { new TypeWithFieldsAndProperties { SomeField = 1, SomeProperty = 2} }.AsDataReader();
+                DataReader.MapAll();
+                DataReader.Read();
             }
 
             public void fields_are_mapped() { 
