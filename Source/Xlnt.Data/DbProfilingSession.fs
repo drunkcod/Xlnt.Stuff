@@ -50,19 +50,25 @@ and IProfilingSessionScopeListener =
     abstract EnterScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
     abstract LeaveScope : oldScope:DbProfilingSessionScope * newScope:DbProfilingSessionScope -> unit
 
-type IProfilingSessionQueryListener =
+type IProfilingSessionBatchListener = 
     abstract BeginBatch : query:ProfiledCommand -> unit
     abstract EndBatch : query:ProfiledCommand * elapsed:TimeSpan -> unit
+
+type IProfilingSessionQueryListener =
     abstract BeginQuery : query:ProfiledCommand -> unit
     abstract EndQuery : query:ProfiledCommand * elapsed:TimeSpan -> unit
     abstract BeginRow : reader:ProfiledDataReader -> unit
     abstract EndRow : reader:ProfiledDataReader * elapsed:TimeSpan -> unit
 
+type IProfilingSessionListener =
+    inherit IProfilingSessionBatchListener
+    inherit IProfilingSessionQueryListener
+
 type NullProfilingSessionListener() =
     interface IProfilingSessionScopeListener with
         member this.EnterScope(oldScope, newScope) = ()
         member this.LeaveScope(oldScope, newScope) = ()
-    interface IProfilingSessionQueryListener with
+    interface IProfilingSessionListener with
         member this.BeginBatch query = ()
         member this.EndBatch(query, elapsed) = ()
         member this.BeginQuery query = ()
@@ -70,23 +76,25 @@ type NullProfilingSessionListener() =
         member this.BeginRow reader = ()
         member this.EndRow(reader, elapsed) = ()
 
-type DbProfilingSession(queryListener:IProfilingSessionQueryListener, scopeListener:IProfilingSessionScopeListener) as this =
+type DbProfilingSession(batchListener : IProfilingSessionBatchListener, queryListener : IProfilingSessionQueryListener, scopeListener:IProfilingSessionScopeListener) as this =
     let globalScope = new DbProfilingSessionScope("<global>", this, None)
     let mutable currentScope = globalScope
 
     new() =
         let nop = NullProfilingSessionListener()
-        DbProfilingSession(nop, nop)
+        DbProfilingSession(nop, nop, nop)
 
-    new(queryListener) = DbProfilingSession(queryListener, NullProfilingSessionListener())
+    new(sessionListener : IProfilingSessionListener) = DbProfilingSession(sessionListener, sessionListener, NullProfilingSessionListener())
+    new(batchListener) = DbProfilingSession(batchListener, NullProfilingSessionListener(), NullProfilingSessionListener())
+    new(queryListener) = DbProfilingSession(NullProfilingSessionListener(), queryListener, NullProfilingSessionListener())
 
     member this.QueryCount = globalScope.QueryCount
     member this.RowCount = globalScope.RowCount
     member this.QueryTime = globalScope.QueryTime
 
-    member this.BeginBatch query = queryListener.BeginBatch query
+    member this.BeginBatch query = batchListener.BeginBatch query
 
-    member this.EndBatch query = queryListener.EndBatch query
+    member this.EndBatch query = batchListener.EndBatch query
 
     member this.BeginQuery query = 
         currentScope.Query()

@@ -25,11 +25,11 @@ namespace Xlnt.Data
         public class TracingContext : ITestInterceptor
         {
             readonly List<IDisposable> garbage = new List<IDisposable>();
-            public TracingEventProfilingSessionQueryListener Trace;
+            public TracingEventProfilingSessionListener Trace;
             public DbConnection Connection;
             
             public void Before() {
-                Trace = new TracingEventProfilingSessionQueryListener();
+                Trace = new TracingEventProfilingSessionListener();
                 Connection = new DbProfilingSession(Trace).Connect(OpenSampleConnection());
                 garbage.Add(Connection);
             }
@@ -50,7 +50,7 @@ namespace Xlnt.Data
 
         public TracingContext Context = new TracingContext();
 
-        TracingEventProfilingSessionQueryListener Trace { get { return Context.Trace; } }
+        TracingEventProfilingSessionListener Trace { get { return Context.Trace; } }
         DbDataReader ExecuteReader(string query) { return Context.ExecuteReader(query); }
 
         public void BatchStarted_when_executing_reader() {
@@ -140,12 +140,12 @@ namespace Xlnt.Data
             {
                 public void sample() {
                     var rewrite = new LinqQueryRewritingSession();
-                    var trace = new TracingEventProfilingSessionQueryListener(rewrite);
+                    var trace = new TracingEventProfilingSessionListener(rewrite);
                     trace.EndQuery += (s, e) => {
                         Console.WriteLine("({0}) {1}", e.Elapsed, e.CommandText);
                     };
 
-                    var session = new DbProfilingSession(trace, rewrite);
+                    var session = new DbProfilingSession(trace, trace, rewrite);
                     using(var db = OpenSampleConnection()) {
                         var context = new DataContext(session.Connect(db));
                         var numbers = context.GetTable<Number>(); 

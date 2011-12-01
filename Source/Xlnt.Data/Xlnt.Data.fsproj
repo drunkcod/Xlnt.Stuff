@@ -43,7 +43,7 @@
     <Compile Include="DbProfilingSession.fs" />
     <Compile Include="DbConnection.fs" />
     <Compile Include="LinqQueryRewritingSession.fs" />
-    <Compile Include="TracingEventProfilingSessionQueryListener.fs" />
+    <Compile Include="TracingEventProfilingSessionListener.fs" />
     <Compile Include="SqlCmdSharp.fs" />
     <Compile Include="SqlFileStorage.fs" />
     <EmbeddedResource Include="SqlFileStorage.Tables.sql" />

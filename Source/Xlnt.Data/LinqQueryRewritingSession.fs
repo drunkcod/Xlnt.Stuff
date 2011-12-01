@@ -47,9 +47,6 @@ type LinqQueryRewritingSession() =
     member this.Rewrite query = TablePattern.Replace(query, addHints)
 
     interface IProfilingSessionQueryListener with
-        member this.BeginBatch query = ()
-        member this.EndBatch(query, elapsed) = ()
-
         member this.BeginQuery query =
             query.CommandText <- this.Rewrite query.CommandText
         
