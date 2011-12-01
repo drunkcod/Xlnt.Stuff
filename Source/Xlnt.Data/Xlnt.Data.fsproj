@@ -51,6 +51,7 @@
     <EmbeddedResource Include="SqlFileStorage.Compact.sql" />
     <Compile Include="GoogleChartTools.fs" />
     <Compile Include="XmlParameter.fs" />
+    <Compile Include="TableParameters.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
