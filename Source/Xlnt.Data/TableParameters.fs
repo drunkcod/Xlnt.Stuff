@@ -15,12 +15,11 @@ with
         | Injector(_, inner) -> inner
 
     member this.Invoke x =
-        let rec loop = function 
-            | Empty -> () 
-            | Injector(f, next) ->
-                f(x)
-                loop next
-        loop this
+        match this with
+        | Empty -> () 
+        | Injector(f, next) ->
+            f(x)
+            next.Invoke x
 
 type TableParameters(inner : IProfilingSessionBatchListener) =
     let mutable injector = Empty
