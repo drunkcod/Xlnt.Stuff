@@ -4,8 +4,6 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Linq.Expressions;
 using Xlnt.Data;
 
 namespace ConsoleApplication23
@@ -17,19 +15,6 @@ namespace ConsoleApplication23
             void Inject(IDbCommand command);
         }
 
-        class ParameterInjector<T,TColumn> : IParameterInjector
-        {
-            readonly XmlParameter parameter;
-            readonly Expression<Func<T,TColumn>> selector;
-
-            public ParameterInjector(XmlParameter parameter, Expression<Func<T,TColumn>> selector) {
-                this.parameter = parameter;
-                this.selector = selector;
-            }
-
-            public void Inject(IDbCommand command) { parameter.Inject(selector, command); }
-        }
-
         class ParameterScope : IDisposable
         {
             readonly TableParamaters parent;
@@ -39,24 +24,22 @@ namespace ConsoleApplication23
             }
 
             void IDisposable.Dispose() {
-                parent.parameters.Pop();
+                parent.injectors.Pop();
             }
         }
 
-        int nextId = 0;
-        readonly Stack<IParameterInjector> parameters = new Stack<IParameterInjector>();
+        readonly Stack<Action<IDbCommand>> injectors = new Stack<Action<IDbCommand>>();
 
-        public IDisposable Add<T,TColumn>(IEnumerable<T> values, Expression<Func<T,TColumn>> selector) {
-            var newParameter = new XmlParameter("@" + typeof(T).Name);
-            var selectorFun = selector.Compile();
-            newParameter.AddRange(values.Select(selector.Compile()).Cast<object>());
-            parameters.Push(new ParameterInjector<T,TColumn>(newParameter, selector));
+        public IDisposable Add<T>(IEnumerable<T> values) {
+            var newParameter = new XmlParameter<T>("@" + typeof(T).Name);
+            newParameter.AddRange(values);
+            injectors.Push(newParameter.Inject);
             return new ParameterScope(this);
         }
 
         public void BeginBatch(ProfiledCommand query) {
-            foreach(var item in parameters)
-                item.Inject(query);
+            foreach(var item in injectors)
+                item(query);
         }         
 
         public void BeginQuery(ProfiledCommand query) { }
@@ -85,7 +68,7 @@ namespace ConsoleApplication23
             
             var dataContext = new DataContext(session.Connect(new SqlConnection("Server=.;Integrated Security=SSPI")));
 
-            using(tempTables.Add(GenerateJunk(5), x => x.Value)) {
+            using(tempTables.Add(GenerateJunk(5))) {
                 foreach(var row in dataContext.GetTable<MyTable>())
                     Console.Write("{0}", row.Value);
             }

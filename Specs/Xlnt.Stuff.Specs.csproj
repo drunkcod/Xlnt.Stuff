@@ -52,6 +52,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Data\SqlCmdSharpSpec.cs" />
+    <Compile Include="Data\XmlParameterSpec.cs" />
     <Compile Include="LinqQueryRewriting.cs" />
     <Compile Include="Web\Mvc\UrlHelperExtensionsSpec.cs" />
     <Compile Include="Web\Mvc\XmlResultSpec.cs" />
