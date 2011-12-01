@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Text;
 using Cone;
+using Xlnt.Data.Mapping;
 
 namespace Xlnt.Data
 {
-    class TableAttribute : Attribute
+    namespace Mapping 
     {
-        public string Name { get; set; }
-    }
+        class TableAttribute : Attribute
+        {
+            public string Name { get; set; }
+        }
 
-    class ColumnAttribute : Attribute
-    {
-        public string Name { get; set; }
+        class ColumnAttribute : Attribute
+        {
+            public string Name { get; set; }
+        }
     }
 
     [Describe(typeof(XmlParameter<>))]
