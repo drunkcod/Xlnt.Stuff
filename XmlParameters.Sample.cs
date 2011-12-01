@@ -47,7 +47,7 @@ namespace ConsoleApplication23
         readonly Stack<IParameterInjector> parameters = new Stack<IParameterInjector>();
 
         public IDisposable Add<T,TColumn>(IEnumerable<T> values, Expression<Func<T,TColumn>> selector) {
-            var newParameter = new XmlParameter("@_" + nextId++);
+            var newParameter = new XmlParameter("@" + typeof(T).Name);
             var selectorFun = selector.Compile();
             newParameter.AddRange(values.Select(selector.Compile()).Cast<object>());
             parameters.Push(new ParameterInjector<T,TColumn>(newParameter, selector));
@@ -85,15 +85,15 @@ namespace ConsoleApplication23
             
             var dataContext = new DataContext(session.Connect(new SqlConnection("Server=.;Integrated Security=SSPI")));
 
-            using(tempTables.Add(new[] {
-                new MyTable { Value = "Hello " },
-                new MyTable { Value = "Temp" },
-                new MyTable { Value = "Table" },
-                new MyTable { Value = " World!\n" }
-            }, x => x.Value)) {
+            using(tempTables.Add(GenerateJunk(5), x => x.Value)) {
                 foreach(var row in dataContext.GetTable<MyTable>())
                     Console.Write("{0}", row.Value);
             }
+        }
+
+        static IEnumerable<MyTable> GenerateJunk(int count) {
+            for(var i = 0; i != count; ++i)
+                yield return new MyTable { Value = i.ToString() };
         }
     }
 }
