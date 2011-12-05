@@ -26,7 +26,7 @@ type RowEventArgs(reader:IDataReader, elapsed) =
 
 type CLIEvent<'T> when 'T :> EventArgs = Event<EventHandler<'T>,'T>
 
-type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListener) =
+type TracingEventProfilingSessionListener(innerBatch:IProfilingSessionBatchListener, innerQuery: IProfilingSessionQueryListener) =
     let beginBatch = CLIEvent()
     let endBatch = CLIEvent()
     let beginQuery = CLIEvent()
@@ -34,7 +34,11 @@ type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListe
     let beginRow = CLIEvent()
     let endRow = CLIEvent()
 
-    new() = TracingEventProfilingSessionQueryListener(NullProfilingSessionListener())
+    new() = 
+        let nop = NullProfilingSessionListener()
+        TracingEventProfilingSessionListener(nop, nop)
+
+    new(inner : IProfilingSessionQueryListener) = TracingEventProfilingSessionListener(NullProfilingSessionListener(), inner)
 
     [<CLIEvent>] member this.BeginBatch = beginBatch.Publish
     [<CLIEvent>] member this.EndBatch = endBatch.Publish
@@ -43,27 +47,27 @@ type TracingEventProfilingSessionQueryListener(inner:IProfilingSessionQueryListe
     [<CLIEvent>] member this.BeginRow = beginRow.Publish
     [<CLIEvent>] member this.EndRow = endRow.Publish
 
-    interface IProfilingSessionQueryListener with
+    interface IProfilingSessionListener with
         member this.BeginBatch query =
-            inner.BeginBatch query
+            innerBatch.BeginBatch query
             beginBatch.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
 
         member this.EndBatch(query, elapsed)=
-            inner.EndBatch(query, elapsed)
+            innerBatch.EndBatch(query, elapsed)
             endBatch.Trigger(this, QueryEventArgs(query, elapsed))
 
         member this.BeginQuery query =
-            inner.BeginQuery query
+            innerQuery.BeginQuery query
             beginQuery.Trigger(this, QueryEventArgs(query, TimeSpan.Zero))
 
         member this.EndQuery(query, elapsed) = 
-            inner.EndQuery(query, elapsed)
+            innerQuery.EndQuery(query, elapsed)
             endQuery.Trigger(this, QueryEventArgs(query, elapsed))
     
         member this.BeginRow reader = 
-            inner.BeginRow reader
+            innerQuery.BeginRow reader
             beginRow.Trigger(this, RowEventArgs(reader, TimeSpan.Zero))
         
         member this.EndRow(reader, elapsed) = 
-            inner.EndRow(reader, elapsed)
+            innerQuery.EndRow(reader, elapsed)
             endRow.Trigger(this, RowEventArgs(reader, elapsed))
