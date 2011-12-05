@@ -7,8 +7,9 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{fd54c5fb-0704-4474-a94a-1af1a5a6c3d5}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <OutputPath>$(SolutionDir)\Build</OutputPath>
-    <IntermediateOutputPath>$(OutputPath)\$(MSBuildProjectName)</IntermediateOutputPath>
+    <BuildPath>$(SolutionDir)\Build</BuildPath>
+    <OutputPath>$(BuildPath)\$(TargetFrameworkVersion)</OutputPath>
+    <IntermediateOutputPath>$(BuildPath)\$(MSBuildProjectName)</IntermediateOutputPath>
     <DocumentationFile>$(OutputPath)\Xlnt.Data.XML</DocumentationFile>
     <RootNamespace>Xlnt.Data</RootNamespace>
     <AssemblyName>Xlnt.Data</AssemblyName>
@@ -60,13 +61,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Transactions" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Xlnt.Stuff\Xlnt.Stuff.csproj">
-      <Name>Xlnt.Stuff</Name>
-      <Project>{a8d3d301-5d52-436e-8ca2-05909d8e1e4a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

@@ -84,7 +84,7 @@ module XmlParameter =
         let getColumn = Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(value, t), column), typeof<obj>)
         let body =
             Expression.Call(target, typeof<StringBuilder>.GetMethod("AppendFormat", [|typeof<string>; typeof<obj>|]), [|Expression.Constant(ParameterFormat) :> Expression; getColumn :> Expression|])
-        { Type = columnType; ColumnName = getColumnName column; Append = Expression.Lambda<Action<StringBuilder, obj>>(body, true, [|target; value|]).Compile() }
+        { Type = columnType; ColumnName = getColumnName column; Append = Expression.Lambda<_>(body, [|target; value|]).Compile() }
 
     [<CompiledName("GetFormatter")>]
     let getFormatter(t:Type) = 
