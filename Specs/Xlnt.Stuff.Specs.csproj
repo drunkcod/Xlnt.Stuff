@@ -51,6 +51,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Data\ParameterCollectionSpec.cs" />
     <Compile Include="Data\SqlCmdSharpSpec.cs" />
     <Compile Include="Data\XmlParameterSpec.cs" />
     <Compile Include="LinqQueryRewriting.cs" />

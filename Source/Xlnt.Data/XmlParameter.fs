@@ -17,36 +17,19 @@ module private Expressions =
         | ExpressionType.MemberAccess -> Some(MemberAccess(x :?> MemberExpression))
         | _ -> None 
 
-type private ParameterHolder<'a> =
-    | Empty
-    | ItemList of 'a List
-    | Sequence of 'a seq
-
 type ParameterCollection<'a>() =
-    let mutable holder = Empty
-    let toList xs = 
-        let x = List()
-        x.AddRange(xs)
-        holder <- ItemList(x)
-        x
+    let mutable holder = List()
 
-    member this.GetEnumerator() =
-        match holder with
-        | Empty -> Seq.empty.GetEnumerator()
-        | ItemList(xs) -> xs.GetEnumerator() :> IEnumerator<'a>
-        | Sequence(xs) -> xs.GetEnumerator()
+    member this.GetEnumerator() = (holder |> Seq.collect id).GetEnumerator()
 
-    member this.AddRange items =
-        match holder with
-        | Empty -> holder <- Sequence(items)        
-        | ItemList(xs) -> xs.AddRange(items)
-        | Sequence(xs) -> toList(xs).AddRange items
+    interface IEnumerable<'a> with
+        member this.GetEnumerator() = this.GetEnumerator()
 
-    member this.Add item =
-        match holder with
-        | Empty -> holder <- Sequence([|item|])
-        | ItemList(xs) -> xs.Add(item)
-        | Sequence(xs) -> toList(xs).Add item
+    interface System.Collections.IEnumerable with
+        member this.GetEnumerator() = this.GetEnumerator() :> System.Collections.IEnumerator
+
+    member this.AddRange items = holder.Add(items)
+    member this.Add item = Seq.singleton item |> this.AddRange
 
 type XmlParameterFormatter = { ColumnName : string; Append : Action<StringBuilder, obj>; Type : Type }
 
@@ -102,7 +85,7 @@ type XmlParameter<'a>(parameterName) =
     let columnName = formatter.ColumnName
 
     interface System.Collections.IEnumerable with
-        member this.GetEnumerator() = parameters.GetEnumerator() :> System.Collections.IEnumerator
+        member this.GetEnumerator() = (parameters :> IEnumerable<'a>).GetEnumerator() :> System.Collections.IEnumerator
 
     member this.Add(value : 'a) = parameters.Add(value)
     member this.AddRange(values : 'a seq) = parameters.AddRange(values)
