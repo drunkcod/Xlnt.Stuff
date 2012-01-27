@@ -22,33 +22,37 @@ namespace Xlnt.Data
     public class XmlParameterSpec
     {
         [Table(Name = "#SingleColumnTable")]
-        class SingleFieldColumnTable 
+        class SingleFieldColumnTable<T>
         {
             [Column]
-            public int Value;
+            public T Value;
         }
 
         public void single_field_column_formatting() {
-            var format = XmlParameter.GetFormatter(typeof(SingleFieldColumnTable));
-            var result = new StringBuilder();
-            format.Append(result, new SingleFieldColumnTable { Value = 42 });
-            Verify.That(() =>  result.ToString() == "<p>42</p>");
+			var parameter = new XmlParameter<SingleFieldColumnTable<int>>("?");
+			parameter.Add(new SingleFieldColumnTable<int> { Value = 42 });
+            Verify.That(() =>  parameter.GetValue() == "<p>42</p>");
         }
 
         [Table(Name = "#SingleColumnTable")]
-        class SinglePropertyColumnTable 
+        class SinglePropertyColumnTable<T>
         {
             [Column]
-            public int Value { get; set; }
+            public T Value { get; set; }
         }
 
         public void single_property_column_formatting() {
-            var format = XmlParameter.GetFormatter(typeof(SinglePropertyColumnTable));
-            var result = new StringBuilder();
-            format.Append(result, new SinglePropertyColumnTable { Value = 42 });
-            Verify.That(() =>  result.ToString() == "<p>42</p>");
-
+			var parameter = new XmlParameter<SinglePropertyColumnTable<int>>("?");
+            parameter.Add(new SinglePropertyColumnTable<int> { Value = 42 });
+            Verify.That(() =>  parameter.GetValue() == "<p>42</p>");
         }
+
+		public void xml_encodes_strings() {
+			var parameter = new XmlParameter<SingleFieldColumnTable<string>>("?");
+            parameter.Add(new SingleFieldColumnTable<string> { Value = "<>" });
+            parameter.Add(new SingleFieldColumnTable<string> { Value = "!!" });
+            Verify.That(() =>  parameter.GetValue() == "<p>&lt;&gt;</p><p>!!</p>");
+		}
 
     }
 }

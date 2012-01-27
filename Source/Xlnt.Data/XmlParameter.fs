@@ -10,6 +10,7 @@ open System.Xml
 open System.Linq.Expressions
 open System.Reflection
 
+
 [<AutoOpen>]
 module private Expressions =
     let (|MemberAccess|_|) (x : Expression) = 
@@ -31,7 +32,7 @@ type ParameterCollection<'a>() =
     member this.AddRange items = holder.Add(items)
     member this.Add item = Seq.singleton item |> this.AddRange
 
-type XmlParameterFormatter = { ColumnName : string; Append : Action<StringBuilder, obj>; Type : Type }
+type XmlParameterFormatter = { ColumnName : string; Append : Action<(obj -> unit), obj>; Type : Type }
 
 module XmlParameter =
     let [<Literal>] ParameterTagName = "p"
@@ -62,11 +63,11 @@ module XmlParameter =
     let internal getColumnName(x : MemberInfo) = getNameAttribute "ColumnAttribute" x
     
     let private singleColumnFormatter(t : Type, column : MemberInfo, columnType) =
-        let target = Expression.Parameter(typeof<StringBuilder>, "target")
+        let target = Expression.Parameter(typeof<FSharpFunc<obj,unit>>, "target")
         let value = Expression.Parameter(typeof<obj>, "value")
         let getColumn = Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(value, t), column), typeof<obj>)
         let body =
-            Expression.Call(target, typeof<StringBuilder>.GetMethod("AppendFormat", [|typeof<string>; typeof<obj>|]), [|Expression.Constant(ParameterFormat) :> Expression; getColumn :> Expression|])
+            Expression.Call(target, target.Type.GetMethod("Invoke", [|typeof<obj>|]), [|getColumn :> Expression|])
         { Type = columnType; ColumnName = getColumnName column; Append = Expression.Lambda<_>(body, [|target; value|]).Compile() }
 
     [<CompiledName("GetFormatter")>]
@@ -93,7 +94,7 @@ type XmlParameter<'a>(parameterName) =
     member this.TempTableDefinition() = 
         let columnType = 
             match columnType with
-            | x when x = typeof<String> -> "varchar(max)"
+            | x when x = typeof<string> -> "varchar(max)"
             | x when x = typeof<int> -> "int"
             | x when x = typeof<Guid> -> "uniqueidentifier"
             | _ -> raise(NotSupportedException("Unsupported column type: " + columnType.Name))
@@ -107,10 +108,15 @@ type XmlParameter<'a>(parameterName) =
         p.Value <- this.GetValue()
         command.Parameters.Add(p) |> ignore
 
-    member private this.GetValue() = 
+    member this.GetValue() = 
         let result = StringBuilder()
+        let (appendItem, flush) = 
+            match columnType.FullName with
+            | "System.String" -> 
+                let xml = XmlWriter.Create(result, XmlWriterSettings(OmitXmlDeclaration = true, ConformanceLevel = ConformanceLevel.Fragment))
+                (fun x -> xml.WriteElementString(XmlParameter.ParameterTagName, x.ToString())), (fun () -> xml.Flush())
+            | _ -> (fun x -> result.AppendFormat(XmlParameter.ParameterFormat, [|x|]) |> ignore), (fun () -> ())
         for item in parameters do
-            formatter.Append.Invoke(result, item)
+            formatter.Append.Invoke(appendItem, item)
+        flush()
         result.ToString()
-    
-    member this.ToSqlParameter() = SqlParameter(ParameterName = parameterName, DbType = DbType.Xml, Value = this.GetValue())
