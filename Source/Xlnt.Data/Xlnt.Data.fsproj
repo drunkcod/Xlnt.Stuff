@@ -13,7 +13,7 @@
     <DocumentationFile>$(OutputPath)\Xlnt.Data.XML</DocumentationFile>
     <RootNamespace>Xlnt.Data</RootNamespace>
     <AssemblyName>Xlnt.Data</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <Name>Xlnt.Data</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>

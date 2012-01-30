@@ -10,7 +10,6 @@ open System.Xml
 open System.Linq.Expressions
 open System.Reflection
 
-
 [<AutoOpen>]
 module private Expressions =
     let (|MemberAccess|_|) (x : Expression) = 
@@ -32,7 +31,16 @@ type ParameterCollection<'a>() =
     member this.AddRange items = holder.Add(items)
     member this.Add item = Seq.singleton item |> this.AddRange
 
-type XmlParameterFormatter = { ColumnName : string; Append : Action<(obj -> unit), obj>; Type : Type }
+type IXmlParameterWriter =
+    abstract Append : obj-> unit
+    abstract GetResult : unit -> string
+
+type XmlParameterFormatter = { 
+    ColumnName : string
+    GetWriter : unit -> IXmlParameterWriter
+    Type : Type 
+    DbType : string
+}
 
 module XmlParameter =
     let [<Literal>] ParameterTagName = "p"
@@ -61,14 +69,37 @@ module XmlParameter =
 
     let internal getTableName(x : Type) = getNameAttribute "TableAttribute" x
     let internal getColumnName(x : MemberInfo) = getNameAttribute "ColumnAttribute" x
-    
+   
+    let private makePrimitiveWriter (accessor : Func<obj, String>) =
+        fun () -> 
+            let result = new StringBuilder()
+            { new IXmlParameterWriter with
+                member this.Append value = result.AppendFormat(ParameterFormat, accessor.Invoke(value)) |> ignore
+                member this.GetResult() = result.ToString()
+            }
+
+    let private makeXmlWriter (accessor : Func<obj, String>) =
+        fun () ->
+            let result = StringBuilder()
+            let xml = XmlWriter.Create(result, XmlWriterSettings(OmitXmlDeclaration = true, ConformanceLevel = ConformanceLevel.Fragment))
+            { new IXmlParameterWriter with
+                member this.Append value = xml.WriteElementString(ParameterTagName, accessor.Invoke(value))
+                member this.GetResult() = xml.Flush(); result.ToString()
+            }
+   
+    let private writerFor = function
+        | x when x = typeof<string> -> "varchar(max)", makeXmlWriter
+        | x when x = typeof<int> -> "int", makePrimitiveWriter
+        | x when x = typeof<Guid> -> "uniqueidentifier", makePrimitiveWriter
+        | x -> raise(NotSupportedException("Unsupported column type:" + x.Name))
+
     let private singleColumnFormatter(t : Type, column : MemberInfo, columnType) =
-        let target = Expression.Parameter(typeof<FSharpFunc<obj,unit>>, "target")
+        let (dbType, writer) = writerFor columnType
+
         let value = Expression.Parameter(typeof<obj>, "value")
         let getColumn = Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(value, t), column), typeof<obj>)
-        let body =
-            Expression.Call(target, target.Type.GetMethod("Invoke", [|typeof<obj>|]), [|getColumn :> Expression|])
-        { Type = columnType; ColumnName = getColumnName column; Append = Expression.Lambda<_>(body, [|target; value|]).Compile() }
+        let body = Expression.Call(getColumn, typeof<obj>.GetMethod("ToString", Type.EmptyTypes))
+        { Type = columnType; DbType = dbType; ColumnName = getColumnName column; GetWriter = writer(Expression.Lambda<_>(body, [|value|]).Compile()) }
 
     [<CompiledName("GetFormatter")>]
     let getFormatter(t:Type) = 
@@ -82,8 +113,6 @@ type XmlParameter<'a>(parameterName) =
     let parameters = ParameterCollection()
     let tableName = XmlParameter.getTableName typeof<'a>
     let formatter = XmlParameter.getFormatter typeof<'a>
-    let columnType = formatter.Type
-    let columnName = formatter.ColumnName
 
     interface System.Collections.IEnumerable with
         member this.GetEnumerator() = (parameters :> IEnumerable<'a>).GetEnumerator() :> System.Collections.IEnumerator
@@ -91,14 +120,8 @@ type XmlParameter<'a>(parameterName) =
     member this.Add(value : 'a) = parameters.Add(value)
     member this.AddRange(values : 'a seq) = parameters.AddRange(values)
 
-    member this.TempTableDefinition() = 
-        let columnType = 
-            match columnType with
-            | x when x = typeof<string> -> "varchar(max)"
-            | x when x = typeof<int> -> "int"
-            | x when x = typeof<Guid> -> "uniqueidentifier"
-            | _ -> raise(NotSupportedException("Unsupported column type: " + columnType.Name))
-        String.Format("select [{0}] = x.value('.', '{4}') into {1} from {2}.nodes('/{3}') _(x)\n", columnName, tableName, parameterName, XmlParameter.ParameterTagName, columnType)
+    member this.TempTableDefinition() =
+        String.Format("select [{0}] = x.value('.', '{4}') into {1} from {2}.nodes('/{3}') _(x)\n", formatter.ColumnName, tableName, parameterName, XmlParameter.ParameterTagName, formatter.DbType)
 
     member this.Inject(command : IDbCommand) =
         command.CommandText <- this.TempTableDefinition() + command.CommandText
@@ -109,14 +132,6 @@ type XmlParameter<'a>(parameterName) =
         command.Parameters.Add(p) |> ignore
 
     member this.GetValue() = 
-        let result = StringBuilder()
-        let (appendItem, flush) = 
-            match columnType.FullName with
-            | "System.String" -> 
-                let xml = XmlWriter.Create(result, XmlWriterSettings(OmitXmlDeclaration = true, ConformanceLevel = ConformanceLevel.Fragment))
-                (fun x -> xml.WriteElementString(XmlParameter.ParameterTagName, x.ToString())), (fun () -> xml.Flush())
-            | _ -> (fun x -> result.AppendFormat(XmlParameter.ParameterFormat, [|x|]) |> ignore), (fun () -> ())
-        for item in parameters do
-            formatter.Append.Invoke(appendItem, item)
-        flush()
-        result.ToString()
+        let writer = formatter.GetWriter()
+        parameters |> Seq.iter writer.Append
+        writer.GetResult()
