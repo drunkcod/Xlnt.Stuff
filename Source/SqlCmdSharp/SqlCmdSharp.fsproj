@@ -39,6 +39,7 @@
     <None Include="App.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <EmbeddedResource Include="Usage.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -46,8 +47,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Xlnt.Data\Xlnt.Data.fsproj">
       <Name>Xlnt.Data</Name>
       <Project>{fd54c5fb-0704-4474-a94a-1af1a5a6c3d5}</Project>

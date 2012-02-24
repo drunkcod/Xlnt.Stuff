@@ -1,11 +1,14 @@
 ﻿namespace Xlnt.Data
 
+open System
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
 
 module SqlCmdSharp =
-    let private endOfBatchPattern = Regex("^\s*GO\s*(\d+)?(--.*)?$", RegexOptions.Compiled + RegexOptions.IgnoreCase)
+    [<Literal>] 
+    let BatchSeparator = "GO"
+    let private endOfBatchPattern = Regex(String.Format("^\s*{0}\s*(\d+)?(--.*)?$", BatchSeparator), RegexOptions.Compiled + RegexOptions.IgnoreCase)
     let IsEndOfBatch line = endOfBatchPattern.IsMatch(line)
 
     [<CompiledName("ReadQueryBatches")>]

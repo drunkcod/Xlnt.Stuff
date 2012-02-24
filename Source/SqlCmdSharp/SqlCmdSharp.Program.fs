@@ -8,21 +8,21 @@ open Xlnt.Data
 
 module Program =
     type ConnectionType =
-        | Trusted
-        | UserPass of string * string
+    | Trusted
+    | UserPass of string * string
 
     let withUser user = function
-        | Some(UserPass(_, password)) -> UserPass(user, password)
-        | _ -> UserPass(user, String.Empty)
+    | Some(UserPass(_, password)) -> UserPass(user, password)
+    | _ -> UserPass(user, String.Empty)
 
     let withPassword password = function
-        | Some(UserPass(user, _)) -> UserPass(user, password)
-        | _ -> UserPass(String.Empty, password)
+    | Some(UserPass(user, _)) -> UserPass(user, password)
+    | _ -> UserPass(String.Empty, password)
 
     type Action =
-        | ShowHelp
-        | QueryAndExit of string
-        | InputFile of string
+    | ShowHelp
+    | QueryAndExit of string
+    | InputFile of string
 
     type ProgramOptions = {
         Server : string option
@@ -61,18 +61,19 @@ module Program =
     let main(args) =
         let options = ProgramOptions.Parse (args |> Array.toList)
         if options.Action = ShowHelp then
-            Console.WriteLine(@"SqlCmd#
-  [-S server           ] [-E trusted connection        ] 
-  [-d use database name] [-Q ""cmdline query"" and exit  ]
-  [-U username         ] [-P password                  ]
-  [-i inputfile]")
+            use reader = new StreamReader(typeof<ProgramOptions>.Assembly.GetManifestResourceStream("Usage.txt"))
+            Console.WriteLine(reader.ReadToEnd())
             0
         else
             use db = new SqlConnection(options.ConnectionString)
             let executeNonQuery query =
                 use cmd = db.CreateCommand()
                 cmd.CommandText <- query
-                cmd.ExecuteNonQuery() |> ignore
+                try 
+                    cmd.ExecuteNonQuery() |> ignore
+                with :? SqlException as e ->
+                    for error : SqlError in e.Errors do
+                        Console.Error.WriteLine("{0} on line {1}", error.Message, error.LineNumber)                    
             try
                 db.Open()
                 match options.Action with
@@ -82,6 +83,5 @@ module Program =
                     SqlCmdSharp.readQueryBatches reader executeNonQuery
                 | _ -> ()
                 0
-            with e -> -1
-
-        
+            with e -> 
+                -1    
