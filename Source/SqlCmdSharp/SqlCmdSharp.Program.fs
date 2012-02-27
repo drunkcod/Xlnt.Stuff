@@ -51,37 +51,44 @@ module Program =
                 | "-P"::password::xs -> ({ opt with Connection = Some(opt.Connection |> withPassword password) }, xs)
                 | "-Q"::query::xs -> ({ opt with Action = QueryAndExit(query) }, xs)
                 | "-i"::inputfile::xs -> ({ opt with Action = InputFile(inputfile) }, xs)
-                | _ -> raise(NotSupportedException())
+                | "-X"::xs -> (opt, xs)
+                | opt::xs -> raise(NotSupportedException("Unsupported argument:" + opt))
             let rec loop = function
                 | (x, []) -> x
                 | x -> parseArg x |> loop 
             loop({ Server = None; Database = None; Connection = None; Action = ShowHelp }, args)
 
+    let executeQuery (options:ProgramOptions) =
+        use db = new SqlConnection(options.ConnectionString)
+        let executeNonQuery query =
+            use cmd = db.CreateCommand()
+            cmd.CommandText <- query
+            try 
+                cmd.ExecuteNonQuery() |> ignore
+            with :? SqlException as e ->
+                for error : SqlError in e.Errors do
+                    Console.Error.WriteLine("{0} on line {1}", error.Message, error.LineNumber)                    
+        try
+            db.Open()
+            match options.Action with
+            | QueryAndExit(command) -> executeNonQuery command
+            | InputFile(path) ->
+                use reader = new StreamReader(path, Encoding.Default)
+                SqlCmdSharp.readQueryBatches reader executeNonQuery
+            | _ -> ()
+            0
+        with e -> 
+            -1
     [<EntryPoint>]
     let main(args) =
-        let options = ProgramOptions.Parse (args |> Array.toList)
-        if options.Action = ShowHelp then
-            use reader = new StreamReader(typeof<ProgramOptions>.Assembly.GetManifestResourceStream("Usage.txt"))
-            Console.WriteLine(reader.ReadToEnd())
-            0
-        else
-            use db = new SqlConnection(options.ConnectionString)
-            let executeNonQuery query =
-                use cmd = db.CreateCommand()
-                cmd.CommandText <- query
-                try 
-                    cmd.ExecuteNonQuery() |> ignore
-                with :? SqlException as e ->
-                    for error : SqlError in e.Errors do
-                        Console.Error.WriteLine("{0} on line {1}", error.Message, error.LineNumber)                    
-            try
-                db.Open()
-                match options.Action with
-                | QueryAndExit(command) -> executeNonQuery command
-                | InputFile(path) ->
-                    use reader = new StreamReader(path, Encoding.Default)
-                    SqlCmdSharp.readQueryBatches reader executeNonQuery
-                | _ -> ()
+        try 
+            let options = ProgramOptions.Parse (args |> Array.toList)
+            if options.Action = ShowHelp then
+                use reader = new StreamReader(typeof<ProgramOptions>.Assembly.GetManifestResourceStream("Usage.txt"))
+                Console.WriteLine(reader.ReadToEnd())
                 0
-            with e -> 
-                -1    
+            else
+                executeQuery options
+        with e ->
+            Console.Error.WriteLine(e.Message)        
+            -1
