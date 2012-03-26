@@ -1,5 +1,5 @@
 ﻿usage: SqlCmdSharp
   [-S server           ] [-E trusted connection         ] 
-  [-d use database name] [-Q ""cmdline query"" and exit ]
+  [-d use database name] [-Q "cmdline query" and exit   ]
   [-U username         ] [-P password                   ]
   [-i inputfile]")     ] [-X no-op for compatibility    ]                         

@@ -64,6 +64,7 @@ namespace Xlnt.Web
         public string QueryString;
         public byte[] Body;
         public IDictionary<string,string> Headers;
+
         readonly MemoryStream responseBody = new MemoryStream();
 
         public override void FlushResponse(bool finalFlush) {

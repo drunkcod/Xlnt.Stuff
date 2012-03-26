@@ -1,5 +1,5 @@
 ﻿namespace Xlnt.Data
 open System.Reflection
 
-[<assembly:AssemblyVersion("2011.12.05.1")>]
+[<assembly:AssemblyVersion("2012.03.26.1")>]
 do ()
