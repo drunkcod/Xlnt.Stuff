@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using System.Web.Routing;
+using System.Web.SessionState;
 using Xlnt.Stuff;
 
 namespace Xlnt.Web.Mvc
@@ -48,8 +49,8 @@ namespace Xlnt.Web.Mvc
         }
 
 
-        public System.Web.SessionState.SessionStateBehavior GetControllerSessionBehavior(RequestContext requestContext, string controllerName) {
-            throw new NotImplementedException();
+        public SessionStateBehavior GetControllerSessionBehavior(RequestContext requestContext, string controllerName) {
+            return SessionStateBehavior.Default;
         }
     }
 }

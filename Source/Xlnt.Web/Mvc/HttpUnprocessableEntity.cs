@@ -16,7 +16,7 @@ namespace Xlnt.Web.Mvc
         public override void ExecuteResult(ControllerContext context) {
             var response = context.HttpContext.Response;
 
-            response.StatusCode = 422;
+            response.StatusCode = StatusCode;
             response.StatusDescription = StatusDescription;
 
             inner.ExecuteResult(context);

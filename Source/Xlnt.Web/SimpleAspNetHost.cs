@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Web;
@@ -25,8 +26,8 @@ namespace Xlnt.Web
         public int StatusCode;
         public string StatusDescription;
         
-        public string ContentType { get { return Headers[HttpHeaders.ContentType]; } }
-        public string Location { get { return Headers[HttpHeaders.Location]; } }
+        public string ContentType { get { return HeaderOrDefault(HttpHeaders.ContentType, string.Empty); } }
+        public string Location { get { return HeaderOrDefault(HttpHeaders.Location, string.Empty); } }
 
         public IDictionary<string,string> Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         public string Body;
@@ -48,6 +49,11 @@ namespace Xlnt.Web
             Headers.ForEach(x => result.AppendFormat("{0}: {1}\n", x.Key, x.Value));
             return result.AppendFormat("\n{0}\n", Body).ToString();
         }
+
+		string HeaderOrDefault(string headerName, string defaultValue) {
+			string value;
+			return Headers.TryGetValue(headerName, out value) ? value : defaultValue;
+		}
     }
 
     class SimpleAspNetHostWorkerRequest : HttpWorkerRequest
@@ -151,7 +157,7 @@ namespace Xlnt.Web
         static internal HostedHttpApplication Instance;
 
         public override void Init() {
-            Instance = this;
+			Instance = this;
         }
     }
 
@@ -183,8 +189,6 @@ namespace Xlnt.Web
             return worker.Response;
         }
 
-        public void Start() { this.Get("/"); }
-
         public void SetApplicationState(string key, object value) {
             WithHttpContext(x => x.Application[key] = value);
         }
@@ -193,12 +197,13 @@ namespace Xlnt.Web
             return WithHttpContext(x => x.Application[key]);
         }
 
-        public object RemoteControl(string method, params object[] parameters) {
-            var app = HostedHttpApplication.Instance;
-            if(app == null)
+        public object Invoke(string method, params object[] parameters) {
+            if(HostedHttpApplication.Instance == null)
                 throw new InvalidOperationException(string.Format("Application instance not found. Make sure you subclass {1} & {0}.Start() has been called or a request has been processed.", GetType().Name, typeof(HostedHttpApplication).Name));
-            var appType = app.GetType();
-            return appType.GetMethod(method).Invoke(app, parameters);
+			
+			var appType = HostedHttpApplication.Instance.GetType();
+			var targetMethod = appType.GetMethod(method);
+			return targetMethod.Invoke(HostedHttpApplication.Instance, parameters);
         }
 
         T WithHttpContext<T>(Func<HttpContext, T> f) {
@@ -208,19 +213,18 @@ namespace Xlnt.Web
 
     public interface IMessageBuilder
     {
+		IMessageBuilder AddHeader(string header, string value);
         IMessageBuilder XmlBody(object value);
         IMessageBuilder TextBody(string value);
-
     }
 
     class SimpleMessageBuilder : IMessageBuilder 
     {
-        internal string ContentType;
         internal byte[] Data;
-
+		internal Dictionary<string, string> Headers = new Dictionary<string, string>();  
 
         public IMessageBuilder TextBody(string value) {
-            ContentType = "text/plain; charset=utf-8";
+            AddHeader(HttpHeaders.ContentType, "text/plain; charset=utf-8");
             Data = Encoding.UTF8.GetBytes(value);
             return this;
         }
@@ -230,20 +234,46 @@ namespace Xlnt.Web
             var result = new MemoryStream();
             var ns = new XmlSerializerNamespaces();
             ns.Add("", "");
-            serializer.Serialize(XmlTextWriter.Create(result, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }), value, ns);
-            ContentType = "text/xml; charset=utf-8";
+            serializer.Serialize(XmlWriter.Create(result, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }), value, ns);
+            AddHeader(HttpHeaders.ContentType, "text/xml; charset=utf-8");
             Data = result.ToArray();
             return this;
         }
+
+		public IMessageBuilder AddHeader(string header, string value)
+		{
+			Headers.Add(header, value);
+			return this;
+		}
     }
+
+	public class HttpHeaderCollection : IEnumerable<HeaderValue>
+	{
+		readonly List<HeaderValue> headers = new List<HeaderValue>();
+ 
+		public void Add(string header, string value) {
+			headers.Add(new HeaderValue(header, value));
+		}
+
+		public HeaderValue[] ToArray() { return headers.ToArray(); }
+
+		IEnumerator<HeaderValue> IEnumerable<HeaderValue>.GetEnumerator() { return headers.GetEnumerator(); }
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return headers.GetEnumerator(); }
+	}
 
     public static class SimpleAspNetHostExtensions 
     {
-        static byte[] EmptyBody = new byte[0];
-        static HeaderValue[] NoHeaders = new HeaderValue[0];
+        static readonly byte[] EmptyBody = new byte[0];
 
-        public static SimpleAspNetHostResult Get(this SimpleAspNetHost self, string url) {
-            return self.ProcessRequest("GET", url, NoHeaders, EmptyBody);
+		public static void Start(this SimpleAspNetHost self) { self.Get("/"); }
+
+        public static SimpleAspNetHostResult Get(this SimpleAspNetHost self, string url, params HeaderValue[] headers) {
+            return self.ProcessRequest("GET", url, headers, EmptyBody);
+        }
+
+        public static SimpleAspNetHostResult Get(this SimpleAspNetHost self, string url, HttpHeaderCollection headers) {
+            return self.ProcessRequest("GET", url, headers.ToArray(), EmptyBody);
         }
 
         public static SimpleAspNetHostResult Put(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
@@ -257,10 +287,12 @@ namespace Xlnt.Web
         static SimpleAspNetHostResult ProcessMessage(this SimpleAspNetHost self, string method, string url,  Action<IMessageBuilder> createBody) {
             var body = new SimpleMessageBuilder();
             createBody(body);
-            return self.ProcessRequest(method, url, new[] {
-                new HeaderValue(HttpHeaders.ContentType, body.ContentType),
-                new HeaderValue(HttpHeaders.ContentLength, body.Data.Length.ToString())
-            }, body.Data);
+			var headers = new HttpHeaderCollection { 
+				{ HttpHeaders.ContentLength, body.Data.Length.ToString() }
+			};
+			foreach(var item in body.Headers)
+				headers.Add(item.Key, item.Value);
+			return self.ProcessRequest(method, url, headers.ToArray(), body.Data);
         }
 
     }
