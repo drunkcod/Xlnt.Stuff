@@ -67,6 +67,7 @@
     <Compile Include="Data\IDataReaderExtensions.cs" />
     <Compile Include="Data\IEnumerableExtensions.cs" />
     <Compile Include="CollectionExtensions.cs" />
+    <Compile Include="EventHandlerExtensions.cs" />
     <Compile Include="ILGeneratorExtensions.cs" />
     <Compile Include="IO\ILineReader.cs" />
     <Compile Include="IO\LineReader.cs" />

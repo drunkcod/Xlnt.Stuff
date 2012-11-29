@@ -31,6 +31,14 @@ namespace Xlnt.Web.Mvc
             return new UrlHelperUrlFactory(self); 
         }
 
+		public static string Absolute(this UrlHelper self, string relPath) {
+			return self.AsUrlFactory().Absolute(relPath);
+		}
+
+		public static string Action(this UrlHelper self, Expression<Action> expr) {
+			return self.AsUrlFactory().Action(expr);
+		}
+
         public static string Action(this IUrlFactory self, Expression<Action> expr) {
             var body = (MethodCallExpression)expr.Body;
             var method = body.Method;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Web;
@@ -9,7 +9,6 @@ using System.Web.Hosting;
 using System.Xml;
 using System.Xml.Serialization;
 using Xlnt.Stuff;
-using HeaderValue = System.Collections.Generic.KeyValuePair<string, string>;
 
 namespace Xlnt.Web
 {
@@ -20,11 +19,24 @@ namespace Xlnt.Web
         public const string Location = "Location";
     }
 
+	[Serializable]
+	public struct HeaderValue
+	{
+		public HeaderValue(string name, string value) {
+			Name = name;
+			Value = value;
+		}
+
+		public readonly string Name;
+		public readonly string Value;
+	}
+
     [Serializable]
-    public class SimpleAspNetHostResult
+    public class SimpleAspNetHostResponse
     {
         public int StatusCode;
         public string StatusDescription;
+		public TimeSpan Duration;
         
         public string ContentType { get { return HeaderOrDefault(HttpHeaders.ContentType, string.Empty); } }
         public string Location { get { return HeaderOrDefault(HttpHeaders.Location, string.Empty); } }
@@ -63,7 +75,7 @@ namespace Xlnt.Web
             Response.Body = Encoding.UTF8.GetString(responseBody.ToArray());
         }
 
-        public SimpleAspNetHostResult Response = new SimpleAspNetHostResult();
+        public SimpleAspNetHostResponse Response = new SimpleAspNetHostResponse();
 
         public string Method;
         public string Url;
@@ -163,64 +175,106 @@ namespace Xlnt.Web
 
     public class SimpleAspNetHost : MarshalByRefObject
     {
+		class ApplicationProxy : MarshalByRefObject
+		{
+			public SimpleAspNetHostResponse ProcessRequest(string method, string url, HeaderValue[] headers, byte[] body) {
+				var headerLookup = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+				headers.ForEach(x => headerLookup.Add(x.Name, x.Value));
+				var parts = url.Split('?');
+
+				var worker = new SimpleAspNetHostWorkerRequest {
+					Method = method,
+					Url = parts[0],
+					QueryString = parts.Length > 1 ? parts[1] : null,
+					Headers = headerLookup,
+					Body = body
+				};
+				var responseDuration = Stopwatch.StartNew();
+				HttpRuntime.ProcessRequest(worker);
+				worker.Response.Duration = responseDuration.Elapsed;
+				worker.EndOfRequest();
+
+				return worker.Response;
+			}
+
+			public void SetApplicationState(string key, object value) {
+				WithHttpContext(x => x.Application[key] = value);
+			}
+
+			public object GetApplicationState(string key) {
+				return WithHttpContext(x => x.Application[key]);
+			}
+
+			public object Invoke(string method, params object[] parameters) {
+				if(HostedHttpApplication.Instance == null)
+					throw new InvalidOperationException(string.Format("Application instance not found. Make sure you subclass {1} & {0}.Start() has been called or a request has been processed.", GetType().Name, typeof(HostedHttpApplication).Name));
+			
+				var appType = HostedHttpApplication.Instance.GetType();
+				var targetMethod = appType.GetMethod(method);
+				return targetMethod.Invoke(HostedHttpApplication.Instance, parameters);
+			}
+
+			T WithHttpContext<T>(Func<HttpContext, T> f) {
+				return f(new HttpContext(new SimpleAspNetHostWorkerRequest { Url = "/" }));
+			}
+		}
+
+		readonly ApplicationProxy proxy;
+
+		private SimpleAspNetHost(ApplicationProxy proxy) { this.proxy = proxy; }
+
         public static SimpleAspNetHost Create(string physicalPath) {
             return Create(physicalPath, "/");
         }
 
         public static SimpleAspNetHost Create(string physicalPath, string vdir) {
-            return (SimpleAspNetHost)ApplicationHost.CreateApplicationHost(typeof(SimpleAspNetHost), vdir, physicalPath);
+            return new SimpleAspNetHost((ApplicationProxy)ApplicationHost.CreateApplicationHost(typeof(ApplicationProxy), vdir, physicalPath));
         }
 
-        public SimpleAspNetHostResult ProcessRequest(string method, string url, HeaderValue[] headers, byte[] body) {
-            var headerLookup = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            headers.ForEach(x => headerLookup.Add(x.Key, x.Value));
-            var parts = url.Split('?');
+		public event EventHandler<SimpleAspNetHostEventArgs> RequestProcessed;
 
-            var worker = new SimpleAspNetHostWorkerRequest {
-                Method = method,
-                Url = parts[0],
-                QueryString = parts.Length > 1 ? parts[1] : null,
-                Headers = headerLookup,
-                Body = body
-            };
-            
-            HttpRuntime.ProcessRequest(worker);
-            worker.EndOfRequest();
-            return worker.Response;
+        public SimpleAspNetHostResponse ProcessRequest(string method, string url, HeaderValue[] headers, byte[] body) {
+			var response = proxy.ProcessRequest(method, url, headers, body);
+			RequestProcessed.Raise(this, new SimpleAspNetHostEventArgs {
+				Method = method,
+				Url = url,
+				Response = response
+			});
+            return response;
         }
 
-        public void SetApplicationState(string key, object value) {
-            WithHttpContext(x => x.Application[key] = value);
-        }
+        public void SetApplicationState(string key, object value) { proxy.SetApplicationState(key, value); }
 
-        public object GetApplicationState(string key) {
-            return WithHttpContext(x => x.Application[key]);
-        }
+        public object GetApplicationState(string key) { return proxy.GetApplicationState(key); }
 
         public object Invoke(string method, params object[] parameters) {
-            if(HostedHttpApplication.Instance == null)
-                throw new InvalidOperationException(string.Format("Application instance not found. Make sure you subclass {1} & {0}.Start() has been called or a request has been processed.", GetType().Name, typeof(HostedHttpApplication).Name));
-			
-			var appType = HostedHttpApplication.Instance.GetType();
-			var targetMethod = appType.GetMethod(method);
-			return targetMethod.Invoke(HostedHttpApplication.Instance, parameters);
-        }
-
-        T WithHttpContext<T>(Func<HttpContext, T> f) {
-            return f(new HttpContext(new SimpleAspNetHostWorkerRequest { Url = "/" }));
-        }
+			return proxy.Invoke(method, parameters);
+		}
     }
 
-    public interface IMessageBuilder
+	public class SimpleAspNetHostEventArgs : EventArgs
+	{
+		public string Method;
+		public string Url;
+		public SimpleAspNetHostResponse Response;
+	}
+
+	public interface IMessageBuilder
     {
 		IMessageBuilder AddHeader(string header, string value);
         IMessageBuilder XmlBody(object value);
         IMessageBuilder TextBody(string value);
     }
 
+	public static class MessageBuilderExtensions 
+	{
+		public static IMessageBuilder Accept(this IMessageBuilder self, string value) { return self.AddHeader("Accept", value); }
+	}
+
     class SimpleMessageBuilder : IMessageBuilder 
     {
-        internal byte[] Data;
+		static readonly byte[] NoData = new byte[0];
+        internal byte[] Data = NoData;
 		internal Dictionary<string, string> Headers = new Dictionary<string, string>();  
 
         public IMessageBuilder TextBody(string value) {
@@ -268,23 +322,23 @@ namespace Xlnt.Web
 
 		public static void Start(this SimpleAspNetHost self) { self.Get("/"); }
 
-        public static SimpleAspNetHostResult Get(this SimpleAspNetHost self, string url, params HeaderValue[] headers) {
+        public static SimpleAspNetHostResponse Get(this SimpleAspNetHost self, string url, params HeaderValue[] headers) {
             return self.ProcessRequest("GET", url, headers, EmptyBody);
         }
 
-        public static SimpleAspNetHostResult Get(this SimpleAspNetHost self, string url, HttpHeaderCollection headers) {
+        public static SimpleAspNetHostResponse Get(this SimpleAspNetHost self, string url, HttpHeaderCollection headers) {
             return self.ProcessRequest("GET", url, headers.ToArray(), EmptyBody);
         }
 
-        public static SimpleAspNetHostResult Put(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
+        public static SimpleAspNetHostResponse Put(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
             return self.ProcessMessage("PUT", url, createBody);
         }
 
-        public static SimpleAspNetHostResult Post(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
+        public static SimpleAspNetHostResponse Post(this SimpleAspNetHost self, string url, Action<IMessageBuilder> createBody) {
             return self.ProcessMessage("POST", url, createBody);
         }
 
-        static SimpleAspNetHostResult ProcessMessage(this SimpleAspNetHost self, string method, string url,  Action<IMessageBuilder> createBody) {
+        static SimpleAspNetHostResponse ProcessMessage(this SimpleAspNetHost self, string method, string url,  Action<IMessageBuilder> createBody) {
             var body = new SimpleMessageBuilder();
             createBody(body);
 			var headers = new HttpHeaderCollection { 
@@ -294,6 +348,5 @@ namespace Xlnt.Web
 				headers.Add(item.Key, item.Value);
 			return self.ProcessRequest(method, url, headers.ToArray(), body.Data);
         }
-
     }
 }

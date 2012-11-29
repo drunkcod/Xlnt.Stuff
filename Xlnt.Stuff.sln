@@ -1,7 +1,12 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Specs", "Specs", "{9E8AAF44-EB70-4BD8-8C16-87283A59B116}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{422721E2-B425-476A-9056-9738384AD843}"
+	ProjectSection(SolutionItems) = preProject
+		TableParameters.Sample.cs = TableParameters.Sample.cs
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Stuff.Specs", "Specs\Xlnt.Stuff.Specs.csproj", "{1417F1E9-2ED9-471B-8E3D-C45C60A00812}"
 EndProject
@@ -13,10 +18,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Stuff", "Source\Xlnt.S
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SqlCmdSharp", "Source\SqlCmdSharp\SqlCmdSharp.fsproj", "{8D41EB6D-9449-4A24-8DD4-24FE85ACB37E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{422721E2-B425-476A-9056-9738384AD843}"
-	ProjectSection(SolutionItems) = preProject
-		TableParameters.Sample.cs = TableParameters.Sample.cs
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xlnt.Web.SampleSite", "Specs\Xlnt.Web.SampleSite\Xlnt.Web.SampleSite.csproj", "{535EA792-954B-4984-A955-461804D2C750}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,11 +80,22 @@ Global
 		{8D41EB6D-9449-4A24-8DD4-24FE85ACB37E}.Release|Mixed Platforms.Build.0 = Release|x86
 		{8D41EB6D-9449-4A24-8DD4-24FE85ACB37E}.Release|x86.ActiveCfg = Release|x86
 		{8D41EB6D-9449-4A24-8DD4-24FE85ACB37E}.Release|x86.Build.0 = Release|x86
+		{535EA792-954B-4984-A955-461804D2C750}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Release|Any CPU.Build.0 = Release|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{535EA792-954B-4984-A955-461804D2C750}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1417F1E9-2ED9-471B-8E3D-C45C60A00812} = {9E8AAF44-EB70-4BD8-8C16-87283A59B116}
+		{535EA792-954B-4984-A955-461804D2C750} = {9E8AAF44-EB70-4BD8-8C16-87283A59B116}
 	EndGlobalSection
 EndGlobal
