@@ -5,19 +5,20 @@ open System.Collections.Generic
 open System.Text.RegularExpressions
 
 type LinqQueryRewritingSession() =
-    static let TablePattern = Regex(@"(\[(?<owner>.+?)\]\.)?\[(?<id>.+?)\] AS \[.+?\]", RegexOptions.Compiled)
+    static let TablePattern = Regex(@"(FROM|JOIN) ((\[(?<owner>.+?)\]\.)?\[(?<id>.+?)\] AS \[.+?\])|, ((\[(?<owner>.+?)\]\.)?\[(?<id>.+?)\] AS \[.+?\])", RegexOptions.Compiled)
     static let OwnerGroup = TablePattern.GroupNumberFromName "owner"
     static let TableIdGroup = TablePattern.GroupNumberFromName "id"
     static let [<Literal>] NoLockPrefix = "#nolock;"
 
     let nolock = Stack()
-    let mutable nolockCache = HashSet()
-    let mutable nolockAll = false
+    let mutable nolockCache = HashSet().Contains
+    let hints = List()
+    let mutable queryHints = String.Empty
 
     let isNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
 
     let withHintsFor it x =
-        if nolockCache.Contains(it) then
+        if nolockCache(it) then
             x + " with(nolock)"
         else x
 
@@ -39,12 +40,27 @@ type LinqQueryRewritingSession() =
     let updateCache f = 
         let r = f nolock
         let tables = nolock |> (Seq.collect << Seq.map) unescapeName
-        nolockCache <- HashSet(tables)
+        nolockCache <- HashSet(tables).Contains
         r
+
+    let updateQueryHints f =
+        f hints
+        queryHints <- "\noption(" + String.Join(",", hints) + ")"
+
+    member this.AddHint hint  = 
+        updateQueryHints (fun x -> x.Add(hint))
+
+    member this.PushNoLockAll() = 
+        nolock.Push([||])
+        nolockCache <- fun x -> true
 
     member this.PushNoLockScope ([<ParamArray>] scope) = updateCache (fun x -> x.Push(scope)) 
     member this.PopNoLockScope() = updateCache (fun x -> x.Pop())
-    member this.Rewrite query = TablePattern.Replace(query, addHints)
+    member this.Rewrite query =
+        let query = TablePattern.Replace(query, addHints)
+        if hints.Count = 0 then
+            query
+        else query + queryHints
 
     interface IProfilingSessionQueryListener with
         member this.BeginQuery query =
@@ -62,3 +78,6 @@ type LinqQueryRewritingSession() =
         member this.LeaveScope(oldScope, newScop) = 
             if oldScope |> isNoLockHint then
                 this.PopNoLockScope() |> ignore
+
+module QueryHint =
+    [<Literal>] let Recompile = "recompile"

@@ -23,10 +23,14 @@ namespace Xlnt.Data
         public override string GetName(int i) { return columns.GetName(i); }
         public override object GetValue(int i) { return columns.Read(items.Current, i); }
         public override bool Read() { return items.MoveNext(); }
+		public override bool IsDBNull(int i) {
+			return GetValue(i) is DBNull;
+		}
 
-        public void MapAll() {
+        public CollectionDataReader<T> MapAll() {
             typeof(T).GetFields(MappedMembers).ForEach(Map);
             typeof(T).GetProperties(MappedMembers).ForEach(Map);
+			return this;
         }
 
         void Map(MemberInfo member) {

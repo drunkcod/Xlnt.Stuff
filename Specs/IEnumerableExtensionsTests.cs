@@ -3,8 +3,8 @@ using Cone;
 
 namespace Xlnt.Stuff.Tests
 {
-    [Describe(typeof(IEnumerableExtensions))]
-    public class IEnumerableExtensionsTests
+    [Describe(typeof(CollectionExtensions))]
+    public class CollectionExtensionsSpec
     {
         public void ForEach_enumerates_all_values() {
             var items = new List<int>();

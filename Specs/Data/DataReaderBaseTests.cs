@@ -1,14 +1,13 @@
 ﻿using System;
-using NUnit.Framework;
 using Moq;
 using System.Data;
+using Cone;
 
 namespace Xlnt.Data
 {
-    [TestFixture]
+    [Describe(typeof(DataReaderBase))]
     public class DataReaderBaseTests
     {
-        [Test]
         public void Implements_named_indexer() {
             var reader = new Mock<DataReaderBase>();
             reader.SetupGet(x => x.FieldCount).Returns(1);

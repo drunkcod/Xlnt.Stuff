@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
 using System.Data.SqlClient;
 using Xlnt.Data;
+using Cone;
 
 namespace Xlnt.Data
 {
@@ -27,10 +27,9 @@ namespace Xlnt.Data
         }
     }
 
+	[Feature("CsvBulkCopy")]
     public class CsvBulkCopyTests : SqlBulkCopyFixture
     {
-        
-        [Test]
         public void Insert_multiple_rows_to_tempdb(){
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
@@ -42,8 +41,8 @@ namespace Xlnt.Data
                 CheckRows(db, new Row { Id = 42, Value = "The Answer" }, new Row { Id = 7, Value = "Sins" });
             });
         }
-        [Test]
-        public void supports_ColumnMapping_by_ordinal(){
+
+		public void supports_ColumnMapping_by_ordinal(){
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);
                 var data = new CsvDataReader(new StringReader("The Answer, 42\r\nSins, 7"));
@@ -56,8 +55,8 @@ namespace Xlnt.Data
                 CheckRows(db, new Row { Id = 42, Value = "The Answer" }, new Row { Id = 7, Value = "Sins" });
             });
         }
-        [Test]
-        public void supports_ColumnMapping_by_name()
+
+		public void supports_ColumnMapping_by_name()
         {
             WithConnection(db => {
                 var bulkCopy = SqlBulkCopyForRows(db);

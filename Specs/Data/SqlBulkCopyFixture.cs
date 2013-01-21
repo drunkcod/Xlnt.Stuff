@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using NUnit.Framework;
+using Cone;
+using Xlnt.Stuff;
 
 namespace Xlnt.Data
 {
@@ -31,7 +32,8 @@ namespace Xlnt.Data
                 using(var reader = command.ExecuteReader())
                     while(reader.Read())
                         rows.Add(new Row { Id = reader.GetInt32(0), Value = reader.GetString(1) });
-                Assert.That(rows, Is.EqualTo(expected));
+                Verify.That(() => rows.Count == expected.Length);
+				expected.ForEach((int n, Row row) => Verify.That(() => row == rows[n]));
             }
         }
     }

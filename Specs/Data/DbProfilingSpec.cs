@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
@@ -11,18 +12,417 @@ using Cone.Helpers;
 
 namespace Xlnt.Data
 {
+	class InMemoryDbDataReader : DbDataReader
+	{
+		bool isClosed;
+
+		public override void Close() { isClosed = true;}
+
+		public override bool Read() {
+			return false;
+		}
+
+		public override bool NextResult() {
+			return false;
+		}
+
+		public override bool IsClosed {
+			get { return isClosed; }
+		}
+
+		public override int Depth
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override int FieldCount
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override bool GetBoolean(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override byte GetByte(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override char GetChar(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override string GetDataTypeName(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override DateTime GetDateTime(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override decimal GetDecimal(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override double GetDouble(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override System.Collections.IEnumerator GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override Type GetFieldType(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override float GetFloat(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override Guid GetGuid(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override short GetInt16(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override int GetInt32(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override long GetInt64(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override string GetName(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override int GetOrdinal(string name)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override System.Data.DataTable GetSchemaTable()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override string GetString(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override object GetValue(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override int GetValues(object[] values)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override bool HasRows
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override bool IsDBNull(int ordinal)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override int RecordsAffected
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override object this[string name]
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override object this[int ordinal]
+		{
+			get { throw new NotImplementedException(); }
+		}
+	}
+
+	class InMemoryDbCommand : DbCommand 
+	{
+		readonly InMemoryDbConnection connection;
+
+		public InMemoryDbCommand(InMemoryDbConnection connection) {
+			this.connection = connection;
+		}
+
+		public override string CommandText { get; set; }
+
+		protected override DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior) {
+			return connection.OnExecuteReader(this);
+		}
+
+		public override object ExecuteScalar() {
+			return connection.OnExecuteScalar(this);
+		}
+
+		public override int CommandTimeout { get; set; }
+
+		protected override DbTransaction DbTransaction {
+			get; set;
+		}
+
+		public override void Cancel()
+		{
+			throw new NotImplementedException();
+		}
+
+
+		public override System.Data.CommandType CommandType
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		protected override DbParameter CreateDbParameter()
+		{
+			throw new NotImplementedException();
+		}
+
+		protected override DbConnection DbConnection
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		protected override DbParameterCollection DbParameterCollection
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override bool DesignTimeVisible
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public override int ExecuteNonQuery()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override void Prepare()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override System.Data.UpdateRowSource UpdatedRowSource
+		{
+			get
+			{
+				throw new NotImplementedException();
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
+	}
+	
+	class InMemoryDbConnection : DbConnection
+	{
+
+		ConnectionState state = ConnectionState.Closed;
+
+		public InMemoryDbConnection() {
+			ConnectionString = string.Empty;
+		}
+
+		public Func<InMemoryDbCommand, DbDataReader> OnExecuteReader = _ => new InMemoryDbDataReader();
+		public Func<InMemoryDbCommand, object> OnExecuteScalar = _ => null;
+
+		protected override DbCommand CreateDbCommand() {
+			return new InMemoryDbCommand(this);
+		}
+
+		public override string ConnectionString { get; set; }
+
+		public override ConnectionState State {
+			get { return state; }
+		}
+
+		public override void Open() {
+			state = ConnectionState.Open;
+		}
+
+		public override void Close() {
+			state = ConnectionState.Closed;
+		}
+
+		public override string ServerVersion {
+			get { return "0.0.0.0"; }
+		}
+
+		protected override DbTransaction BeginDbTransaction(System.Data.IsolationLevel isolationLevel)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override void ChangeDatabase(string databaseName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override string DataSource
+		{
+			get { throw new NotImplementedException(); }
+		}
+
+		public override string Database
+		{
+			get { throw new NotImplementedException(); }
+		}
+	}
+
+	class DbDataReaderAdapter : DbDataReader
+	{
+		readonly IDataReader inner;
+
+		public DbDataReaderAdapter(IDataReader inner) {
+			this.inner = inner;
+		}
+
+		public override void Close() { inner.Close(); }
+
+		public override int Depth { get { return inner.Depth; } }
+
+		public override int FieldCount { get { return inner.FieldCount; } }
+
+		public override bool GetBoolean(int ordinal) { return inner.GetBoolean(ordinal); }
+
+		public override byte GetByte(int ordinal) { return inner.GetByte(ordinal); }
+
+		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length) {
+			return inner.GetBytes(ordinal, dataOffset, buffer, bufferOffset, length);
+		}
+
+		public override char GetChar(int ordinal) { return inner.GetChar(ordinal); }
+
+		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length) {
+			return inner.GetChars(ordinal, dataOffset, buffer, bufferOffset, length);
+		}
+
+		public override string GetDataTypeName(int ordinal) { return inner.GetDataTypeName(ordinal); }
+
+		public override DateTime GetDateTime(int ordinal) { return inner.GetDateTime(ordinal); }
+
+		public override decimal GetDecimal(int ordinal) { return inner.GetDecimal(ordinal); }
+
+		public override double GetDouble(int ordinal) { return inner.GetDouble(ordinal); }
+
+		public override Type GetFieldType(int ordinal) { return inner.GetFieldType(ordinal); }
+
+		public override float GetFloat(int ordinal) { return inner.GetFloat(ordinal); }
+
+		public override Guid GetGuid(int ordinal) { return inner.GetGuid(ordinal); }
+
+		public override short GetInt16(int ordinal) { return inner.GetInt16(ordinal); }
+
+		public override int GetInt32(int ordinal) { return inner.GetInt32(ordinal); }
+
+		public override long GetInt64(int ordinal) { return inner.GetInt64(ordinal); }
+
+		public override string GetName(int ordinal) { return inner.GetName(ordinal); }
+
+		public override int GetOrdinal(string name) { return inner.GetOrdinal(name); }
+
+		public override DataTable GetSchemaTable() { return inner.GetSchemaTable(); }
+
+		public override string GetString(int ordinal) { return inner.GetString(ordinal); }
+
+		public override object GetValue(int ordinal) { return inner.GetValue(ordinal); }
+
+		public override int GetValues(object[] values) { return inner.GetValues(values); }
+
+		public override bool IsClosed { get { return inner.IsClosed; } }
+
+		public override bool IsDBNull(int ordinal) { return inner.IsDBNull(ordinal); }
+
+		public override bool NextResult() { return inner.NextResult(); }
+
+		public override bool Read() { return inner.Read(); }
+
+		public override int RecordsAffected { get { return inner.RecordsAffected; } }
+
+		public override object this[string name] { get { return inner[name]; } }
+
+		public override object this[int ordinal] { get { return inner[ordinal]; } }
+
+		public override System.Collections.IEnumerator GetEnumerator() {
+			throw new NotSupportedException();
+		}
+
+		public override bool HasRows {
+			get { throw new NotSupportedException(); }
+		}
+	}
+
     [Describe(typeof(DbProfilingSession))]
     public class DbProfilingSessionSpec
     {
         static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilingSessionSpec).Assembly.CodeBase).LocalPath); } }
 
-        static DbConnection OpenSampleConnection() {
-            var connection = new SqlCeConnection(string.Format("DataSource={0}", Path.Combine(DataPath, "Sample.sdf")));
-            connection.Open();
-            return connection;
+        static InMemoryDbConnection OpenSampleConnection() {
+			return new InMemoryDbConnection();
         }
 
-        public class TracingContext : ITestInterceptor
+        public class TracingContext : ITestContext
         {
             readonly List<IDisposable> garbage = new List<IDisposable>();
             public TracingEventProfilingSessionListener Trace;
@@ -105,18 +505,31 @@ namespace Xlnt.Data
                 public int Value;    
             }
 
+			readonly List<Number> Numbers = new List<Number>
+			{
+				new Number { Value = 1 },
+				new Number { Value = 2 },
+				new Number { Value = 3 },
+			};
+
             int NumbersRowCount { 
-                get { 
-                    using(var db = OpenSampleConnection())
-                        return (int)db.ExecuteScalar("select count(*) from Numbers");
-                }
+                get { return Numbers.Count; }
             }
 
             public void compare_deferred_and_local_execution() {
                 var session = new DbProfilingSession();
-                var context = new DataContext(session.Connect(OpenSampleConnection()));
+				var db = OpenSampleConnection();
+                var context = new DataContext(session.Connect(db));
                 var numbers = context.GetTable<Number>(); 
 
+				db.OnExecuteReader = command => {
+					if(command.CommandText == "SELECT SUM([t0].[Value]) AS [value]\r\nFROM [Numbers] AS [t0]") {
+						return new DbDataReaderAdapter(new[]{ new { value = 42} }.AsDataReader().MapAll());
+					} else if(command.CommandText == "SELECT [t0].[Value]\r\nFROM [Numbers] AS [t0]") {
+						return new DbDataReaderAdapter(Numbers.AsDataReader().MapAll());
+					}
+					throw new InvalidAssumptionException("Unexpected query = " + command.CommandText, null);
+				};
                 var deffered = session.Scoped("Sent to database for execution", _ => {
                     numbers.Sum(x => x.Value);
                 });                    
@@ -133,33 +546,6 @@ namespace Xlnt.Data
 
                 Verify.That(() => session.QueryCount == deffered.QueryCount + inMemory.QueryCount);
                 Verify.That(() => session.RowCount == deffered.RowCount + inMemory.RowCount);
-            }
-
-            [Context("query rewriting")]
-            public class QueryRewriting
-            {
-                public void sample() {
-                    var rewrite = new LinqQueryRewritingSession();
-                    var trace = new TracingEventProfilingSessionListener(rewrite);
-                    trace.EndQuery += (s, e) => {
-                        Console.WriteLine("({0}) {1}", e.Elapsed, e.CommandText);
-                    };
-
-                    var session = new DbProfilingSession(trace, trace, rewrite);
-                    using(var db = OpenSampleConnection()) {
-                        var context = new DataContext(session.Connect(db));
-                        var numbers = context.GetTable<Number>(); 
-                        var tableName = context.Mapping.GetTable(typeof(Number)).TableName;
-                        session.Scoped("#nolock;" + tableName, scope => {
-                            numbers.Count();
-                        });
-
-                        rewrite.PushNoLockScope(tableName);
-                        numbers.Count();
-                        rewrite.PopNoLockScope();
-                        numbers.Count();
-                    }
-                }
             }
         }
     }

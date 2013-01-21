@@ -5,6 +5,8 @@ namespace Xlnt.Data
 {
     public abstract class DataReaderBase : IDataReader
     {
+		bool isClosed;
+
         public abstract int FieldCount { get; }
         public abstract object GetValue(int i);
         public abstract string GetName(int i);
@@ -22,9 +24,7 @@ namespace Xlnt.Data
 
         #region IDataReader Members
 
-        void IDataReader.Close() {
-            throw new NotImplementedException();
-        }
+        void IDataReader.Close() { isClosed = true; }
 
         int IDataReader.Depth {
             get { throw new NotImplementedException(); }
@@ -34,13 +34,9 @@ namespace Xlnt.Data
             throw new NotImplementedException();
         }
 
-        bool IDataReader.IsClosed {
-            get { throw new NotImplementedException(); }
-        }
+        bool IDataReader.IsClosed { get { return isClosed; } }
 
-        bool IDataReader.NextResult() {
-            throw new NotImplementedException();
-        }
+        bool IDataReader.NextResult() { return false; }
 
         int IDataReader.RecordsAffected {
             get { throw new NotImplementedException(); }
@@ -122,9 +118,7 @@ namespace Xlnt.Data
             throw new NotImplementedException();
         }
 
-        bool IDataRecord.IsDBNull(int i) {
-            throw new NotImplementedException();
-        }
+        public abstract bool IsDBNull(int i);
 
         object IDataRecord.this[string name] {
             get { return GetValue(GetOrdinal(name)); }

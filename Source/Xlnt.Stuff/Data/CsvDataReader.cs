@@ -56,6 +56,7 @@ namespace Xlnt.Data
 
         public override object GetValue(int i){ return values[i]; }
         protected override void DisposeCore() { reader.Dispose(); }
+		public override bool IsDBNull(int i) { return false; }
 
         void ReadRecord() {
             values.Clear();
