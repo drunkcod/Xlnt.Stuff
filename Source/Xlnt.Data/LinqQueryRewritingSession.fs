@@ -2,12 +2,13 @@
 
 open System
 open System.Collections.Generic
+open System.Text
 open System.Text.RegularExpressions
 
 type LinqQueryRewritingSession() =
-    static let TablePattern = Regex(@"(FROM|JOIN) ((\[(?<owner>.+?)\]\.)?\[(?<id>.+?)\] AS \[.+?\])|, ((\[(?<owner>.+?)\]\.)?\[(?<id>.+?)\] AS \[.+?\])", RegexOptions.Compiled)
-    static let OwnerGroup = TablePattern.GroupNumberFromName "owner"
-    static let TableIdGroup = TablePattern.GroupNumberFromName "id"
+    static let TablePattern = Regex(@"^(?<op>(FROM|INNER JOIN|LEFT OUTER JOIN) )(?<table>(, )?((\[.+?\]\.)?\[.+?\] AS \[.+?\]))+", RegexOptions.Compiled +  RegexOptions.Multiline + RegexOptions.ExplicitCapture)
+    static let OpGroup = TablePattern.GroupNumberFromName "op"
+    static let TableGroup = TablePattern.GroupNumberFromName "table"
     static let [<Literal>] NoLockPrefix = "#nolock;"
 
     let nolock = Stack()
@@ -17,19 +18,12 @@ type LinqQueryRewritingSession() =
 
     let isNoLockHint (scope:DbProfilingSessionScope) = scope.ScopeName.StartsWith(NoLockPrefix)
 
-    let withHintsFor it x =
-        if nolockCache(it) then
-            x + " with(nolock)"
-        else x
-
-    let addHints (m:Match) = 
-        let table = 
-            let id = m.Groups.[TableIdGroup].Value
-            let owner = m.Groups.[OwnerGroup]
-            if owner.Success then
-                owner.Value + "." + id
-            else id
-        m.Value |> withHintsFor table
+    let addHints (m:Match) =
+        let result = (StringBuilder(m.Groups.[OpGroup].Value))
+        m.Groups.[TableGroup].Captures 
+        |> Seq.cast
+        |> Seq.fold (fun (x:StringBuilder) (table:Capture) -> x.AppendFormat("{0} with(nolock)", table)) result
+        |> string
     
     let unescapeName (s:String) = 
         let parts = s.Split([|'.'|])

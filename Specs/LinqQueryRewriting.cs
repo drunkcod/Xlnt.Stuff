@@ -6,7 +6,7 @@ namespace Xlnt.Data
     public class LinqQueryRewriting
     {
         [Row("FROM [MyTable] AS [t0]", "FROM [MyTable] AS [t0] with(nolock)")
-        ,Row("FROM [t0].[MyTable] AS [t0]", "FROM [t0].[MyTable] AS [t0]")//avoid Table/Column collision
+        ,Row("SELECT [t0].[MyTable] AS [t0]", "SELECT [t0].[MyTable] AS [t0]")//avoid Table/Column collision
         ,DisplayAs("{0} -> {1}")]
         public void nolock(string input, string expected) {
             var session = new LinqQueryRewritingSession();
@@ -24,8 +24,10 @@ namespace Xlnt.Data
         }
 
 		[Row("SELECT [Foo] AS [Foo]", "SELECT [Foo] AS [Foo]")
+		,Row("SELECT [Foo] AS [Foo], [Bar] AS [Bar]", "SELECT [Foo] AS [Foo], [Bar] AS [Bar]")
 		,Row("FROM [Foo] AS [t0]", "FROM [Foo] AS [t0] with(nolock)")
-		,Row("JOIN [Foo] AS [t0]", "JOIN [Foo] AS [t0] with(nolock)")
+		,Row("INNER JOIN [Foo] AS [t0]", "INNER JOIN [Foo] AS [t0] with(nolock)")
+		,Row("LEFT OUTER JOIN [Foo] AS [t0]", "LEFT OUTER JOIN [Foo] AS [t0] with(nolock)")
 		,Row("FROM [Foo] AS [t0], [Bar] AS [t1]", "FROM [Foo] AS [t0] with(nolock), [Bar] AS [t1] with(nolock)")
 		,DisplayAs("{0} -> {1}")]
 		public void nolock_all(string input, string expected)
