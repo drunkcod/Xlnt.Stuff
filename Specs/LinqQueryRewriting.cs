@@ -11,6 +11,7 @@ namespace Xlnt.Data
 		,Row("INNER JOIN [Foo] AS [t0]", "INNER JOIN [Foo] AS [t0] with(nolock)")
 		,Row("LEFT OUTER JOIN [Foo] AS [t0]", "LEFT OUTER JOIN [Foo] AS [t0] with(nolock)")
 		,Row("FROM [Foo] AS [t0], [Bar] AS [t1]", "FROM [Foo] AS [t0] with(nolock), [Bar] AS [t1] with(nolock)")
+        ,Row("    FROM [dbo].[Respondent] AS [t0]","    FROM [dbo].[Respondent] AS [t0] with(nolock)", DisplayAs = "Handles leading white-space")
 		,DisplayAs("{0} -> {1}")]
 		public void nolock_all(string input, string expected)
 		{
