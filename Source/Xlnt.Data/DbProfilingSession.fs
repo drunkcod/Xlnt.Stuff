@@ -92,21 +92,21 @@ type DbProfilingSession(batchListener : IProfilingSessionBatchListener, queryLis
     member this.RowCount = globalScope.RowCount
     member this.QueryTime = globalScope.QueryTime
 
-    member this.BeginBatch query = batchListener.BeginBatch query
+    member private this.BeginBatch query = batchListener.BeginBatch query
 
-    member this.EndBatch query = batchListener.EndBatch query
+    member private this.EndBatch query = batchListener.EndBatch query
 
-    member this.BeginQuery query = 
+    member private this.BeginQuery query = 
         currentScope.Query()
         queryListener.BeginQuery query
     
-    member this.EndQuery(query, elapsed) = 
+    member private this.EndQuery(query, elapsed) = 
         currentScope.QueryElapsed elapsed
         queryListener.EndQuery(query, elapsed)
 
-    member this.BeginRow reader = queryListener.BeginRow reader 
+    member private this.BeginRow reader = queryListener.BeginRow reader 
 
-    member this.EndRow(reader, elapsed) = 
+    member private this.EndRow(reader, elapsed) = 
         currentScope.Row()
         queryListener.EndRow(reader, elapsed)
 
