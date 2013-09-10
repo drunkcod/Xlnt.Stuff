@@ -115,12 +115,13 @@ type DbProfilingSession(batchListener : IProfilingSessionBatchListener, queryLis
     member this.Connect db =
         let db' = new ProfiledConnection(db)
         db'.CommandCreated.Add(fun command ->
+            let batchTimer = Stopwatch()
             command.BeginQuery.Add(fun e -> 
                 this.BeginBatch(e)
-                this.BeginQuery(e))
+                this.BeginQuery(e)
+                batchTimer.Start())
             command.EndQuery.Add(fun (e, elapsed) -> this.EndQuery(e, elapsed))
             command.ReaderCreated.Add(fun reader -> 
-                let batchTimer = Stopwatch.StartNew()
                 reader.BeginRow.Add(this.BeginRow)
                 reader.EndRow.Add(this.EndRow)
                 reader.Closed.Add(fun _ -> 
