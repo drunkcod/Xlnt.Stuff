@@ -85,8 +85,14 @@ type DbProfilingSession(batchListener : IProfilingSessionBatchListener, queryLis
         DbProfilingSession(nop, nop, nop)
 
     new(sessionListener : IProfilingSessionListener) = DbProfilingSession(sessionListener, sessionListener, NullProfilingSessionListener())
-    new(batchListener) = DbProfilingSession(batchListener, NullProfilingSessionListener(), NullProfilingSessionListener())
-    new(queryListener) = DbProfilingSession(NullProfilingSessionListener(), queryListener, NullProfilingSessionListener())
+    
+    new(batchListener) = 
+        let nop = NullProfilingSessionListener()
+        DbProfilingSession(batchListener, nop, nop)
+    
+    new(queryListener) =
+        let nop = NullProfilingSessionListener() 
+        DbProfilingSession(nop, queryListener, nop)
 
     member this.QueryCount = globalScope.QueryCount
     member this.RowCount = globalScope.RowCount
