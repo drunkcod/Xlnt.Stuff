@@ -1,4 +1,4 @@
 @echo off
-set MSBuild=%Windir%\Microsoft.Net\Framework\v4.0.30319\MSBuild.exe
+set MSBuild="%ProgramFiles(x86)%\MSBuild\12.0\Bin\MSBuild.exe"
 
-%MSBuild% %*
+%MSBuild% /m /nologo %*

@@ -1,6 +1,8 @@
 $RECYCLE.BIN/
 Bin
 Build
+packages
+*.swp
 *.suo
 *.user
 obj/
