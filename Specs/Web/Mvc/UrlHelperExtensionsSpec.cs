@@ -22,24 +22,24 @@ namespace Xlnt.Web.Mvc
 
         public void niladic_lambda_action() {
             var url = UrlHelperFor("Foo");            
-            Verify.That(() => url.Action(() => Index(42)) == "/Foo/42/Index");
+            Check.That(() => url.Action(() => Index(42)) == "/Foo/42/Index");
         }
 
         public void multi_argument_action() {
             var url = UrlHelperFor("Multiple");
-            Verify.That(() => url.Action(() => Foo(7, "Moar")) == "/Multiple/7/Foo/Moar");
+            Check.That(() => url.Action(() => Foo(7, "Moar")) == "/Multiple/7/Foo/Moar");
         }
 
         public void AbsoluteUrl_included_scheme_and_authority() {
             var url = UrlHelperFor("Foo");
-            Verify.That(() => url.Absolute("/") == "http://localhost/");
+            Check.That(() => url.Absolute("/") == "http://localhost/");
         }
 
         public static int DefaultId = 3;
 
         public void supports_reading_static_fields() {
             var url = UrlHelperFor("Foo");
-            Verify.That(() => url.Action(() => Index(DefaultId)) == "/Foo/" + DefaultId + "/Index");
+            Check.That(() => url.Action(() => Index(DefaultId)) == "/Foo/" + DefaultId + "/Index");
         }
 
         string Indirect<T>(T value, Func<T, string> block) { return block(value); }

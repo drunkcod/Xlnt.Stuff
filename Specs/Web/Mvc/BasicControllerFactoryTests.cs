@@ -26,7 +26,7 @@ namespace Xlnt.Web.Mvc
         }
 
         public void returns_MissingController_if_no_matching_controller_available() {
-            Verify.That(() => Factory.CreateController(EmptyContext(), "MissingController") is MissingController);
+            Check.That(() => Factory.CreateController(EmptyContext(), "MissingController") is MissingController);
         }
 
         public void dispose_Disposable_controllers() {
@@ -41,7 +41,7 @@ namespace Xlnt.Web.Mvc
         public void controller_names_are_case_insensitive() {
             Factory.Register(new[]{ typeof(Dummies.DummyController) });
 
-            Verify.That(() => Factory.CreateController(EmptyContext(), "dummy") is Dummies.DummyController);
+            Check.That(() => Factory.CreateController(EmptyContext(), "dummy") is Dummies.DummyController);
         }
 
         [Context("controller registration")]
@@ -52,7 +52,7 @@ namespace Xlnt.Web.Mvc
                 var controller = new MissingController();
                 factory.RegisterController("Foo", () => controller);
             
-                Verify.That(() => object.ReferenceEquals(factory.CreateController(EmptyContext(), "Foo"), controller));
+                Check.That(() => object.ReferenceEquals(factory.CreateController(EmptyContext(), "Foo"), controller));
             }
         }
     }

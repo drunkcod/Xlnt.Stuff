@@ -22,11 +22,13 @@ namespace Xlnt.Data
             items.AddRange(sequence);
 
             var values = items.ToArray();
-            Verify.That(() => values[0] == 1);
-            Verify.That(() => values[1] == 2);
+            Check.That(
+				() => values[0] == 1,
+				() => values[1] == 2);
             values = items.ToArray();
-            Verify.That(() => values[0] == 3);
-            Verify.That(() => values[1] == 4);
+            Check.That(
+				() => values[0] == 3,
+				() => values[1] == 4);
         }
     }
 }

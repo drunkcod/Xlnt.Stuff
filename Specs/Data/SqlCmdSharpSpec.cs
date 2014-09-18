@@ -12,7 +12,7 @@ namespace Xlnt.Data
         ,Row(" GO", true)
         ,Row("GOTO", false)]
         public void end_of_batch_separator(string line, bool ok) {
-            Verify.That(() => SqlCmdSharp.IsEndOfBatch(line) == ok);
+            Check.That(() => SqlCmdSharp.IsEndOfBatch(line) == ok);
         }
     }
 }

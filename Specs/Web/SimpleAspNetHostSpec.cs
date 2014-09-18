@@ -27,7 +27,7 @@ namespace Xlnt.Web
 		,Row(422)
 		,DisplayAs("{0}", Heading = "StatusCode")]
 		public void StatusCodeHandling(int statusCode) {
-			Verify.That(() => SampleSite.Get("/Echo?status=" + statusCode).StatusCode == statusCode);
+			Check.That(() => SampleSite.Get("/Echo?status=" + statusCode).StatusCode == statusCode);
 		}
 	}
 }

@@ -252,97 +252,98 @@ namespace Xlnt.Data
 		}
 	}
 
-    [Describe(typeof(DbProfilingSession))]
-    public class DbProfilingSessionSpec
-    {
-        static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilingSessionSpec).Assembly.CodeBase).LocalPath); } }
+	[Describe(typeof(DbProfilingSession))]
+	public class DbProfilingSessionSpec
+	{
+		static string DataPath { get { return Path.GetDirectoryName(new Uri(typeof(DbProfilingSessionSpec).Assembly.CodeBase).LocalPath); } }
 
-        static InMemoryDbConnection OpenSampleConnection() {
+		static InMemoryDbConnection OpenSampleConnection() {
 			return new InMemoryDbConnection();
-        }
+		}
 
-        public class TracingContext : ITestContext
-        {
-            readonly List<IDisposable> garbage = new List<IDisposable>();
-            public TracingEventProfilingSessionListener Trace;
-            public DbConnection Connection;
-            
-            public void Before() {
-                Trace = new TracingEventProfilingSessionListener();
-                Connection = new DbProfilingSession(Trace).Connect(OpenSampleConnection());
-                garbage.Add(Connection);
-            }
+		public class TracingContext : ITestContext
+		{
+			readonly List<IDisposable> garbage = new List<IDisposable>();
+			public TracingEventProfilingSessionListener Trace;
+			public DbConnection Connection;
+			
+			public void Before() {
+				Trace = new TracingEventProfilingSessionListener();
+				Connection = new DbProfilingSession(Trace).Connect(OpenSampleConnection());
+				garbage.Add(Connection);
+			}
 
-            public void After(ITestResult result) {
-                garbage.ForEach(x => x.Dispose());
-                garbage.Clear();
-            }
+			public void After(ITestResult result) {
+				garbage.ForEach(x => x.Dispose());
+				garbage.Clear();
+			}
 
-            public DbDataReader ExecuteReader(string query) {
-                var q = Connection.CreateCommand();
-                q.CommandText = query;
-                var reader = q.ExecuteReader();
-                garbage.Add(reader);
-                return reader;
-            }
-        }
+			public DbDataReader ExecuteReader(string query) {
+				var q = Connection.CreateCommand();
+				q.CommandText = query;
+				var reader = q.ExecuteReader();
+				garbage.Add(reader);
+				return reader;
+			}
+		}
 
-        public TracingContext Context = new TracingContext();
+		public TracingContext Context = new TracingContext();
 
-        TracingEventProfilingSessionListener Trace { get { return Context.Trace; } }
-        DbDataReader ExecuteReader(string query) { return Context.ExecuteReader(query); }
+		TracingEventProfilingSessionListener Trace { get { return Context.Trace; } }
+		DbDataReader ExecuteReader(string query) { return Context.ExecuteReader(query); }
 
-        public void BatchStarted_when_executing_reader() {
-            var batchStarted = new EventSpy<QueryEventArgs>();
-            Trace.BeginBatch += batchStarted;
-            ExecuteReader("select * from Numbers");
+		public void BatchStarted_when_executing_reader() {
+			var batchStarted = new EventSpy<QueryEventArgs>();
+			Trace.BeginBatch += batchStarted;
+			ExecuteReader("select * from Numbers");
 
-            Verify.That(() => batchStarted.HasBeenCalled);
-        }
+			Check.That(() => batchStarted.HasBeenCalled);
+		}
 
-        public void batch_starts_before_query() {
-            var batchStarted = new EventSpy<QueryEventArgs>();
-            var queryStarted = new EventSpy<QueryEventArgs>();
-            Trace.BeginBatch += batchStarted;
-            Trace.BeginQuery += queryStarted;
-            ExecuteReader("select * from Numbers");
+		public void batch_starts_before_query() {
+			var batchStarted = new EventSpy<QueryEventArgs>();
+			var queryStarted = new EventSpy<QueryEventArgs>();
+			Trace.BeginBatch += batchStarted;
+			Trace.BeginQuery += queryStarted;
+			ExecuteReader("select * from Numbers");
 
-            Verify.That(() => batchStarted.CalledBefore(queryStarted));
-        }
+			Check.That(() => batchStarted.CalledBefore(queryStarted));
+		}
 
-        public void EndBatch_when_reader_closed() {
-            var batchEnded = new EventSpy<QueryEventArgs>();
-            Trace.EndBatch += batchEnded;
-           
-            var reader = ExecuteReader("select * from Numbers");
-            Verify.That(() => !batchEnded.HasBeenCalled);
-            reader.Close();
-            Verify.That(() => batchEnded.HasBeenCalled);
-        }
+		public void EndBatch_when_reader_closed() {
+			var batchEnded = new EventSpy<QueryEventArgs>();
+			Trace.EndBatch += batchEnded;
+		   
+			var reader = ExecuteReader("select * from Numbers");
+			Check.That(() => !batchEnded.HasBeenCalled);
+			reader.Close();
+			Check.That(() => batchEnded.HasBeenCalled);
+		}
 
-        [DisplayAs("Ado.Net usage")]
-        public void basic_usage() {
-            var session = new DbProfilingSession();
-            var db = session.Connect(OpenSampleConnection());
+		[DisplayAs("Ado.Net usage")]
+		public void basic_usage() {
+			var session = new DbProfilingSession();
+			var db = session.Connect(OpenSampleConnection());
 
-            var query = db.CreateCommand();
-            query.CommandText = "select sum(value) from Numbers";
-            query.ExecuteScalar();
+			var query = db.CreateCommand();
+			query.CommandText = "select sum(value) from Numbers";
+			query.ExecuteScalar();
 
-            Verify.That(() => session.QueryCount == 1);
-            Verify.That(() => session.RowCount == 0);
-        }
+			Check.That(
+				() => session.QueryCount == 1,
+				() => session.RowCount == 0);
+		}
 
-        [Context("Linq2Sql usage")]
-        public class Linq2Sql 
-        {
-            //Sample Table.
-            [Table(Name = "Numbers")]
-            public class Number
-            {
-                [Column(Name = "Value")]
-                public int Value;    
-            }
+		[Context("Linq2Sql usage")]
+		public class Linq2Sql 
+		{
+			//Sample Table.
+			[Table(Name = "Numbers")]
+			public class Number
+			{
+				[Column(Name = "Value")]
+				public int Value;    
+			}
 
 			readonly List<Number> Numbers = new List<Number>
 			{
@@ -351,15 +352,15 @@ namespace Xlnt.Data
 				new Number { Value = 3 },
 			};
 
-            int NumbersRowCount { 
-                get { return Numbers.Count; }
-            }
+			int NumbersRowCount { 
+				get { return Numbers.Count; }
+			}
 
-            public void compare_deferred_and_local_execution() {
-                var session = new DbProfilingSession();
+			public void compare_deferred_and_local_execution() {
+				var session = new DbProfilingSession();
 				var db = OpenSampleConnection();
-                var context = new DataContext(session.Connect(db));
-                var numbers = context.GetTable<Number>(); 
+				var context = new DataContext(session.Connect(db));
+				var numbers = context.GetTable<Number>(); 
 
 				db.OnExecuteReader = command => {
 					if(command.CommandText == "SELECT SUM([t0].[Value]) AS [value]\r\nFROM [Numbers] AS [t0]") {
@@ -369,23 +370,25 @@ namespace Xlnt.Data
 					}
 					throw new InvalidAssumptionException("Unexpected query = " + command.CommandText, null);
 				};
-                var deffered = session.Scoped("Sent to database for execution", _ => {
-                    numbers.Sum(x => x.Value);
-                });                    
+				var deffered = session.Scoped("Sent to database for execution", _ => {
+					numbers.Sum(x => x.Value);
+				});                    
 
-                var inMemory = session.Scoped("Pull all rows to memory", _ => {
-                    numbers.AsEnumerable().Sum(x => x.Value);                   
-                });
+				var inMemory = session.Scoped("Pull all rows to memory", _ => {
+					numbers.AsEnumerable().Sum(x => x.Value);                   
+				});
 
-                Verify.That(() => deffered.QueryCount == 1);
-                Verify.That(() => deffered.RowCount == 1);
+				Check.That(
+					() => deffered.QueryCount == 1,
+					() => deffered.RowCount == 1,
+					
+					() => inMemory.QueryCount == 1,
+					() => inMemory.RowCount == NumbersRowCount);
 
-                Verify.That(() => inMemory.QueryCount == 1);
-                Verify.That(() => inMemory.RowCount == NumbersRowCount);
-
-                Verify.That(() => session.QueryCount == deffered.QueryCount + inMemory.QueryCount);
-                Verify.That(() => session.RowCount == deffered.RowCount + inMemory.RowCount);
-            }
-        }
-    }
+				Check.That(
+					() => session.QueryCount == deffered.QueryCount + inMemory.QueryCount,
+					() => session.RowCount == deffered.RowCount + inMemory.RowCount);
+			}
+		}
+	}
 }

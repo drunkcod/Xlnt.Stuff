@@ -11,7 +11,7 @@ namespace Xlnt.Web.Mvc
         public void omits_bom() {
             var result = new MemoryStream();
             XmlResult.Serialize(result, "Hello");
-            Verify.That(() => result.ToArray().Length == Encoding.UTF8.GetByteCount("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<string>Hello</string>"));
+            Check.That(() => result.ToArray().Length == Encoding.UTF8.GetByteCount("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<string>Hello</string>"));
         }
     }
 }

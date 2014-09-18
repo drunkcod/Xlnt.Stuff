@@ -31,7 +31,7 @@ namespace Xlnt.Data
                     .Add(x => (object)x.Id)
                     .Add(x => x.Value);
 
-            Verify.That(() => (data as IDataReader).FieldCount == 2);
+            Check.That(() => (data as IDataReader).FieldCount == 2);
         }
 
         public void contiains_source_number_of_rows() {
@@ -41,7 +41,7 @@ namespace Xlnt.Data
             while(data.Read())
                 ++count;
 
-            Verify.That(() => count == SomeRows.Length);
+            Check.That(() => count == SomeRows.Length);
         }
 
         class TypeWithFieldsAndProperties
@@ -64,23 +64,23 @@ namespace Xlnt.Data
             }
 
             public void fields_are_mapped() { 
-                Verify.That(() => DataReader.ColumnMappings.Any(field => field.Name == "SomeField")); 
+                Check.That(() => DataReader.ColumnMappings.Any(field => field.Name == "SomeField")); 
             }
             
             public void fields_are__readable() { 
-                Verify.That(() => (int)DataReader.GetValue(DataReader.GetOrdinal("SomeField")) == 1); 
+                Check.That(() => (int)DataReader.GetValue(DataReader.GetOrdinal("SomeField")) == 1); 
             }
 
             public void properties_are_mapped() { 
-                Verify.That(() => DataReader.ColumnMappings.Any(field => field.Name == "SomeProperty")); 
+                Check.That(() => DataReader.ColumnMappings.Any(field => field.Name == "SomeProperty")); 
             }
 
             public void properties_are_readable() {
-                Verify.That(() => (int)DataReader.GetValue(DataReader.GetOrdinal("SomeProperty")) == 2);
+                Check.That(() => (int)DataReader.GetValue(DataReader.GetOrdinal("SomeProperty")) == 2);
             }
 
             public void number_of_columns_matche_public_fields_and_properties() {
-                Verify.That(() => DataReader.ColumnMappings.Count == 2);
+                Check.That(() => DataReader.ColumnMappings.Count == 2);
             }
         }
     }
