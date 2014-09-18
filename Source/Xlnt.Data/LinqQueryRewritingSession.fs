@@ -17,7 +17,7 @@ type SqlFormatting = {
 
 type LinqQueryRewritingSession() =
 
-    static let TablePattern = Regex(@"^(?<op>\s*(FROM|INNER JOIN|LEFT OUTER JOIN) )(?<table>(, )?((\[.+?\]\.)?\[.+?\] AS \[.+?\]))+", RegexOptions.Compiled +  RegexOptions.Multiline + RegexOptions.ExplicitCapture)
+    static let TablePattern = Regex(@"^(?<op>\s*(FROM|INNER JOIN|LEFT OUTER JOIN|CROSS JOIN) )(?<table>(, )?((\[.+?\]\.)?\[.+?\] AS \[.+?\]))+", RegexOptions.Compiled +  RegexOptions.Multiline + RegexOptions.ExplicitCapture)
     static let OpGroup = TablePattern.GroupNumberFromName "op"
     static let TableGroup = TablePattern.GroupNumberFromName "table"
     static let Nop = id<string>
